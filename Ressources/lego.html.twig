@@ -1,0 +1,30 @@
+
+<div class="lego_card">
+      <div class="info_section">
+        <div class="lego_header">
+          <img class="locandina" src="/images/{{lego.boxImage}}"/>
+          <h1>{{lego.name}}</h1>
+          <h4>Collection : {{lego.collection}}</h4>
+          <span class="pieces">Pièces : {{lego.pieces}}</span>
+          <p class="price">{{lego.price}}€</p><br>
+          <a href="index.php?buy={{lego.id}}"><button>Buy</button></a>
+        </div>
+        <div class="lego_desc">
+          <p class="text">
+            {{lego.description}}
+        </p>
+        </div>
+        <div class="lego_social">
+          <ul>
+            <li><i class="material-icons">share</i></li>
+            <li><i class="material-icons"></i></li>
+            <li><i class="material-icons">chat_bubble</i></li>
+          </ul>
+
+        </div>
+
+      </div>
+      <div class="blur_back">
+        <img src="/images/{{lego.legoImage}}" alt="background lego card">
+      </div>
+</div>
