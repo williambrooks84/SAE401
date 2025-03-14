@@ -1,7 +1,7 @@
 services:
 
   nginx:
-    container_name: tp-symfony-nginx
+    container_name: sae-symfony-nginx
     image: nginx:latest
     ports:
       - "8787:80"
@@ -12,7 +12,7 @@ services:
       - php
 
   php:
-    container_name: tp-symfony-php
+    container_name: sae-symfony-php
     build:
       context: .
       dockerfile: docker/php/Dockerfile
