@@ -1,0 +1,34 @@
+@import 'tailwindcss';
+
+@theme{
+    /*Primary Tokens*/
+    --color-light: #F1F1F1;
+    --color-dark: #141414;
+    --color-white: #fff;
+    --color-green: #3E8506;
+    --color-red: #ef4444;
+    --color-blue: #1877F2;
+    --color-light-grey: #C4C4C4;
+    
+    /*Semantic Tokens*/
+    --color-fg: var(--color-dark); 
+    --color-bg: var(--color-light);
+    --color-textbox: var(--color-light-grey);
+    --color-error: var(--color-red);
+    --color-button-green: var(--color-green);
+    --color-default: var(--color-dark);
+    --color-button-green-text: var(--color-white);
+    --color-button-grey-text: var(--color-light-grey);
+    --color-button-blue-text: var(--color-blue);
+}
+
+@layer base {
+    .dark{
+        --color-bg: var(--color-dark);
+        --color-fg: var(--color-light);
+    }
+}
+
+body{
+    background-color: var(--color-bg);
+}
