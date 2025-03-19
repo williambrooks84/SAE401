@@ -19,6 +19,14 @@ export interface LogoProps {
 
 //Post
 export interface PostProps {
+    key: string;
+    id: string;
+    content: string;
+    created_at: string;
+}
+
+//PostData
+export interface PostData {
     id: string;
     content: string;
     created_at: string;

@@ -1,15 +1,15 @@
-interface PostProps {
-    key: string;
-    id: string;
-    content: string;
-    created_at: string;
-}
+import DateTime from "../ui/DateTime";
+import { HomeIcon } from "../assets/icons";
+import { PostProps } from "../interfaces/dataDefinitions";
 
-export default function Post({ id, content, created_at }: PostProps) {
+export default function Post({ content, created_at }: PostProps) {
     return (
-        <div>
-            <p>{content}</p>
-            <small>{created_at}</small>
+        <div className="flex flex-col p-5 w-full rounded-4xl bg-post-background">
+            <p className="text-xl text-post-text">{content}</p>
+            <hr className="my-4 border-post-grey" />
+            <DateTime date={created_at} />
+            <HomeIcon className="w-6 h-6" />
         </div>
+
     );
 }

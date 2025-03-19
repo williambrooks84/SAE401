@@ -1,11 +1,7 @@
 import { useEffect, useState } from "react";
 import Post from "./Post";
-
-interface PostData {
-    id: string;
-    content: string;
-    created_at: string;
-}
+import { PostData } from "../interfaces/dataDefinitions";
+import NavigationBar from "../ui/NavigationBar";
 
 export default function Home() {
     const [posts, setPosts] = useState<PostData[]>([]);
@@ -26,14 +22,17 @@ export default function Home() {
 
     return (
         <div>
-            {posts.map((post: PostData) => (
-            <Post 
-                key={post.id}
-                id={post.id} 
-                content={post.content} 
-                created_at={post.created_at} 
-            />
-            ))}
+            <NavigationBar />
+            <div className="p-5 flex flex-col items-center justify-center max-w-full md:max-w-2/3 space-y-5 mx-auto">
+                {posts.map((post: PostData) => (
+                    <Post 
+                        key={post.id}
+                        id={post.id} 
+                        content={post.content} 
+                        created_at={post.created_at} 
+                    />
+                ))}
+            </div>
         </div>
     );
 }

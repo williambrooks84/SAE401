@@ -8,3 +8,8 @@ export interface ButtonProps {
     children?: React.ReactNode;
     className?: string;
 }
+
+//Icons
+export interface IconProps {
+    className?: string;
+}

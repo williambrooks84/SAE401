@@ -5,10 +5,12 @@
     --color-light: #F1F1F1;
     --color-dark: #141414;
     --color-white: #fff;
+    --color-black: #000;
     --color-green: #3E8506;
     --color-red: #ef4444;
     --color-blue: #1877F2;
     --color-light-grey: #C4C4C4;
+    --color-mid-grey: #6B6868;
     
     /*Semantic Tokens*/
     --color-fg: var(--color-dark); 
@@ -16,7 +18,12 @@
     --color-textbox: var(--color-light-grey);
     --color-error: var(--color-red);
     --color-button-green: var(--color-green);
+    --color-nav-green: var(--color-green);
     --color-default: var(--color-dark);
+    --color-post-background: var(--color-white);
+    --color-post-text: var(--color-black);
+    --color-border-grey: var(--color-light-grey);
+    --color-post-grey: var(--color-mid-grey);
     --color-button-green-text: var(--color-white);
     --color-button-grey-text: var(--color-light-grey);
     --color-button-blue-text: var(--color-blue);
