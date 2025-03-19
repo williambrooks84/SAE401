@@ -16,3 +16,10 @@ export interface LogoProps {
     alt: string;
     className?: string;
 }
+
+//Post
+export interface PostProps {
+    id: string;
+    content: string;
+    created_at: string;
+}
