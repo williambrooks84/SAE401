@@ -1,10 +1,4 @@
-import React from 'react';
-
-interface FormBoxProps {
-    placeholder?: string;
-    value?: string;
-    onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
-}
+import { FormBoxProps } from '../interfaces/dataDefinitions';
 
 export default function FormBox({ placeholder, value, onChange }: FormBoxProps) {
     const inputType = placeholder?.toLowerCase().includes('password') ? 'password' : 'text';

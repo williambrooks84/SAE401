@@ -1,6 +1,4 @@
-interface FormLabelProps {
-    label: string;
-}
+import { FormLabelProps } from "../interfaces/dataDefinitions";
 
 export default function FormLabel({ label }: FormLabelProps) {
     return (

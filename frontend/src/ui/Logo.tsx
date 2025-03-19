@@ -1,8 +1,4 @@
-interface LogoProps {
-    src: string;
-    alt: string;
-    className?: string;
-}
+import { LogoProps } from "../interfaces/dataDefinitions";
 
 export default function Logo({ src, alt, className }: LogoProps) {
     return (
