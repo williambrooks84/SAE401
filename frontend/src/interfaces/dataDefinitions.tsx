@@ -5,11 +5,6 @@ export interface FormBoxProps {
     onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-//FormLabel
-export interface FormLabelProps {
-    label: string;
-}
-
 //Logo
 export interface LogoProps {
     src: string;
@@ -30,4 +25,12 @@ export interface PostData {
     id: string;
     content: string;
     created_at: string;
+}
+
+//TextArea
+export interface TextAreaProps {
+    placeholder: string;
+    value: string;
+    onChange: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
+    rows?: number;
 }

@@ -9,7 +9,7 @@ export default function FormBox({ placeholder, value, onChange }: FormBoxProps) 
             placeholder={placeholder}
             value={value}
             onChange={onChange}
-            className="p-3 border rounded bg-textbox"
+            className="p-3 border w-full rounded bg-textbox"
         />
     );
 }

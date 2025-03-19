@@ -8,6 +8,10 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Request;
+use App\Entity\Post;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 
 class PostController extends AbstractController
@@ -30,4 +34,28 @@ class PostController extends AbstractController
             'next_page' => $nextPage
         ]);
     }
+
+     // 🚀 Route pour la création d'un post
+     #[Route('/posts', name: 'posts.create', methods: ['POST'])]
+     public function createPost(Request $request, EntityManagerInterface $entityManager): JsonResponse
+     {
+         $data = json_decode($request->getContent(), true);
+ 
+         if (!isset($data['content']) || empty(trim($data['content']))) {
+             return new JsonResponse(['error' => 'Le contenu est obligatoire'], 400);
+         }
+ 
+         if (strlen($data['content']) > 280) {
+             return new JsonResponse(['error' => 'Le message ne peut pas dépasser 280 caractères'], 400);
+         }
+ 
+         $post = new Post();
+         $post->setContent($data['content']);
+         $post->setCreatedAt(new \DateTime());
+ 
+         $entityManager->persist($post);
+         $entityManager->flush();
+ 
+         return new JsonResponse(['message' => 'Post créé avec succès', 'post' => $post], 201);
+     }
 }

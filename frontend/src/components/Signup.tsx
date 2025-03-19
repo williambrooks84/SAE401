@@ -81,7 +81,8 @@ export default function Signup() {
     const navigate = useNavigate();
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen p-7 gap-24">
+        <div className="flex flex-col items-center justify-center min-h-screen p-7 gap-6">
+            <h1 className="text-4xl md:text-5xl font-bold text-center text-green">Create an account</h1>
             <div className="flex w-full flex-col gap-2">
                 <FormLabel label="Choose a username:"/>
                 <FormBox
@@ -115,6 +116,9 @@ export default function Signup() {
                 />
                 {passwordError && <span className="text-error">{confirmPasswordError}</span>}
             </div>
+            <Button variant="bluebgless" size="bgless" rounded="none" onClick={() => navigate('/login')}>
+                Already have an account? Login here 
+            </Button>
             <Button variant="default" size="default" rounded="default" onClick = {handleSignupClick}>
                 Create account
             </Button>

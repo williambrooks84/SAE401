@@ -20,6 +20,10 @@ const buttonVariants = cva("rounded-md font-medium focus:outline-none", {
         },
         width: {
             default: "w-full",
+            fit: "w-fit",
+        },
+        disabled:{
+            false: "false",
         }
     },
     defaultVariants: {
