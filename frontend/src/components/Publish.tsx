@@ -2,6 +2,7 @@ import NavigationBar from "../ui/NavigationBar"
 import TextArea from "../ui/TextArea"
 import FormLabel from "../ui/FormLabel"
 import Button from "../ui/Button"
+import LetterCounter from "../ui/LetterCounter"
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -71,6 +72,7 @@ export default function Publish(){
                             onChange={(e) => handlePostChange(e as React.ChangeEvent<HTMLTextAreaElement>)}
                             rows={5}
                         />
+                        <LetterCounter value={post} limit="280"/>
                         {postError && <span className="text-error">{postError}</span>}
                         {successMessage && <span className="text-success">{successMessage}</span>}
                     </div>
