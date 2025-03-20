@@ -77,7 +77,7 @@ export default function Publish(){
                         {successMessage && <span className="text-success">{successMessage}</span>}
                     </div>
                     <div className="flex justify-center mt-6">
-                        <Button width="fit" className="px-5" onClick={handleSubmit} disabled={loading || post.length > 280 || post.trim() === ""}>Publish</Button>
+                        <Button width="fit" padding="default" onClick={handleSubmit} disabled={loading || post.length > 280 || post.trim() === ""}>Publish</Button>
                     </div>
                 </div>
             </div>

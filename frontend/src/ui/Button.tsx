@@ -22,6 +22,10 @@ const buttonVariants = cva("rounded-md font-medium focus:outline-none", {
             default: "w-full",
             fit: "w-fit",
         },
+        padding:{
+            default: "px-5",
+            none: "px-0",
+        },
         disabled:{
             false: "false",
         }
@@ -31,6 +35,7 @@ const buttonVariants = cva("rounded-md font-medium focus:outline-none", {
         size: "default",
         rounded: "default",
         width: "default",
+        padding: "none",
     },
 });
 
@@ -39,6 +44,7 @@ const Button = ({
     size,
     rounded,
     width,
+    padding,
     onClick,
     className,
     children,
@@ -46,7 +52,7 @@ const Button = ({
 }: ButtonProps) => {
     return (
         <button
-            className={cn(buttonVariants({ variant, size, rounded, width, className }))}
+            className={cn(buttonVariants({ variant, size, rounded, width, padding, className }))}
             onClick={onClick}
             {...props}
         >

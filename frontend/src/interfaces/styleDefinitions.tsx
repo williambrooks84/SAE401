@@ -4,6 +4,7 @@ export interface ButtonProps {
     size?: "default" | "bgless";
     rounded?: "none" | "default" | "full";
     width?: "default" | "fit";
+    padding?: "default" | "none";
     onClick?: () => void;
     disabled?: boolean;
     children?: React.ReactNode;
@@ -24,3 +25,10 @@ export interface FormLabelProps {
     weight?: "medium" | "semibold";
     color?: "default";
 }
+
+//ProfileMenu
+export interface ProfileMenuProps {
+    isVisible: boolean;
+    onClose: () => void;
+  }
+  

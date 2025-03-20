@@ -34,3 +34,8 @@ export interface TextAreaProps {
     onChange: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
     rows?: number;
 }
+
+export interface LetterCounterProps {
+    value: string;
+    limit: string;
+}

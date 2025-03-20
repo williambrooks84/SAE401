@@ -1,7 +1,4 @@
-interface LetterCounterProps {
-    value: string;
-    limit: string;
-}
+import { LetterCounterProps } from "../interfaces/dataDefinitions";
 
 export default function LetterCounter({ value, limit }: LetterCounterProps) {
     return (
