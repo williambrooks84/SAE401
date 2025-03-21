@@ -13,6 +13,7 @@ export default function Signup() {
     const [passwordError, setPasswordError] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [confirmPasswordError, setConfirmPasswordError] = useState('');
+    const [generalError, setGeneralError] = useState('');
 
     const validateEmail = (email: string) => {
         const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -20,11 +21,8 @@ export default function Signup() {
     };
 
     const verifyPassword = (password: string, confirmPassword: string) => {
-        if (password !== confirmPassword) {
-            return false;
-        }
-        return true;
-    }
+        return password === confirmPassword;
+    };
 
     const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setUsername(e.target.value);
@@ -42,14 +40,14 @@ export default function Signup() {
         setConfirmPassword(e.target.value);
     };
 
-    const handleSignupClick = () => {
+    const handleSignupClick = async () => {
         let valid = true;
 
         if (username === '') {
             setUsernameError('Please enter your username.');
             valid = false;
         } else {
-            setUsername('');
+            setUsernameError('');
         }
 
         if (!validateEmail(email)) {
@@ -72,9 +70,33 @@ export default function Signup() {
         } else {
             setConfirmPasswordError('');
         }
+
         if (valid) {
-            navigate('/');
-            //navigate('/login');
+            const response = await fetch("http://localhost:8080/signup", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    username,
+                    email,
+                    password,
+                    confirmPassword,
+                }),
+            });
+
+            if (response.ok) {
+                navigate('/login');
+            } else {
+                const data = await response.json();
+                if (data.error === 'Email is already in use.') {
+                    setEmailError(data.error);
+                } else if (data.error === 'Username is already taken.') {
+                    setUsernameError(data.error);
+                } else {
+                    setGeneralError(data.error || 'An error occurred during signup.');
+                }
+            }
         }
     };
 
@@ -84,46 +106,45 @@ export default function Signup() {
         <div className="flex flex-col items-center justify-center min-h-screen p-7 gap-6">
             <h1 className="text-4xl md:text-5xl font-bold text-center text-green">Create an account</h1>
             <div className="flex w-full flex-col gap-2">
-                <FormLabel label="Choose a username:"/>
+                <FormLabel label="Choose a username:" />
                 <FormBox
                     placeholder="Username"
                     value={username}
                     onChange={handleUsernameChange}
                 />
                 {usernameError && <span className="text-error">{usernameError}</span>}
-                
-                <FormLabel label="Enter your email:"/>
+
+                <FormLabel label="Enter your email:" />
                 <FormBox
                     placeholder="Email"
                     value={email}
                     onChange={handleEmailChange}
                 />
                 {emailError && <span className="text-error">{emailError}</span>}
-                
-                <FormLabel label="Choose a password:"/>
+
+                <FormLabel label="Choose a password:" />
                 <FormBox
                     placeholder="Password"
                     value={password}
                     onChange={handlePasswordChange}
                 />
                 {passwordError && <span className="text-error">{passwordError}</span>}
-                
-                <FormLabel label="Confirm your password:"/>
+
+                <FormLabel label="Confirm your password:" />
                 <FormBox
                     placeholder="Confirm password"
                     value={confirmPassword}
                     onChange={handleConfirmPasswordChange}
                 />
-                {passwordError && <span className="text-error">{confirmPasswordError}</span>}
+                {confirmPasswordError && <span className="text-error">{confirmPasswordError}</span>}
             </div>
+            {generalError && <span className="text-error">{generalError}</span>}
             <Button variant="bluebgless" size="bgless" rounded="none" onClick={() => navigate('/login')}>
-                Already have an account? Login here 
+                Already have an account? Login here
             </Button>
-            <Button variant="default" size="default" rounded="default" onClick = {handleSignupClick}>
+            <Button variant="default" size="default" rounded="default" onClick={handleSignupClick}>
                 Create account
             </Button>
         </div>
-    )
-
-
+    );
 }
