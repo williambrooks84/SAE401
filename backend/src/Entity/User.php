@@ -7,9 +7,10 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
-class User implements PasswordAuthenticatedUserInterface
+class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -48,9 +49,9 @@ class User implements PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getUsername(): ?string
+    public function getUsername(): string
     {
-        return $this->username;
+        return $this->email; // You should use email here, as email is typically used as the username in authentication systems
     }
 
     public function setUsername(string $username): static
@@ -72,7 +73,7 @@ class User implements PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getPassword(): ?string
+    public function getPassword(): string
     {
         return $this->password;
     }
@@ -82,6 +83,31 @@ class User implements PasswordAuthenticatedUserInterface
         $this->password = $password;
 
         return $this;
+    }
+
+    /**
+     * This method is required by Symfony to get the unique user identifier (e.g. email or username).
+     */
+    public function getUserIdentifier(): string
+    {
+        return $this->email; // Use email as the unique identifier for your user
+    }
+
+    public function getRoles(): array
+    {
+        // By default, you can assign roles to the user here, like ROLE_USER
+        return ['ROLE_USER'];
+    }
+
+    public function getSalt(): ?string
+    {
+        // Return null if you're using bcrypt or argon2
+        return null;
+    }
+
+    public function eraseCredentials(): void
+    {
+        // You can clear sensitive data if you store anything like plain text passwords here.
     }
 
     /**

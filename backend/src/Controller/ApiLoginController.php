@@ -3,7 +3,9 @@
 namespace App\Controller;
 
 use App\Entity\User;
+use App\Entity\Token;
 use App\Repository\UserRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -14,28 +16,44 @@ use Symfony\Component\HttpFoundation\Response;
 final class ApiLoginController extends AbstractController
 {
     #[Route('/login', name: 'api_login', methods: ['POST'])]
-    public function login(Request $request, UserPasswordHasherInterface $passwordHasher, UserRepository $userRepository): JsonResponse
-    {
+    public function login(
+        Request $request, 
+        UserPasswordHasherInterface $passwordHasher, 
+        UserRepository $userRepository,
+        EntityManagerInterface $em
+    ): JsonResponse {
         $data = json_decode($request->getContent(), true);
-        $email = $data['email'] ?? '';
-        $password = $data['password'] ?? '';
 
-        // Find the user by email
-        $user = $userRepository->findOneBy(['email' => $email]);
-       
-        if($passwordHasher->isPasswordValid($user, $password)) {
-            // If no user found or password doesn't match, return 401
-            return $this->json(['error' => 'Invalid xddfxdfxdcredentials.'], Response::HTTP_UNAUTHORIZED);
+        if (!$data || !isset($data['email'], $data['password'])) {
+            return $this->json(['error' => 'Invalid request data'], Response::HTTP_BAD_REQUEST);
         }
 
-        // Generate a token (for example JWT or any other method)
-        $token = bin2hex(random_bytes(16)); // Simple random token for example
+        $email = $data['email'];
+        $password = $data['password'];
 
-        // You could save the token in the database or cache for validation on future requests
+        // Check if the user exists
+        $user = $userRepository->findOneBy(['email' => $email]);
 
+        if (!$user) {
+            return $this->json(['error' => 'User not found'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        // Validate password
+        if (!$passwordHasher->isPasswordValid($user, $password)) {
+            return $this->json(['error' => 'Invalid password'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        // Generate a token
+        $token = new Token($user);
+        $em->persist($token);
+        $em->flush();
+
+        // Return the response
         return $this->json([
-            'user' => $user->getUserIdentifier(),
-            'token' => $token,
+            'user' => [
+                'id' => $user->getId(), // You can choose to return other info, but avoid exposing too much
+            ],
+            'token' => $token->getValue(),
         ]);
     }
 }

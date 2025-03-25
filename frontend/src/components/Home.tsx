@@ -8,7 +8,7 @@ export default function Home() {
 
     useEffect(() => {
         async function fetchPosts() {
-            const response = await fetch('http://localhost:8080/posts?page=1');
+            const response = await fetch('http://localhost:8080/posts');
             const data = await response.json();
             if (data && Array.isArray(data.posts)) {
                 setPosts(data.posts);
