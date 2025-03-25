@@ -5,7 +5,7 @@ import { ButtonProps } from "../interfaces/styleDefinitions";
 const buttonVariants = cva("rounded-md font-medium focus:outline-none", {
     variants: {
         variant: {
-            default: "bg-button-green text-button-green-text",
+            default: "bg-button-green hover:bg-button-green-hover text-button-green-text",
             greybgless: "text-button-grey-text",
             bluebgless: "text-button-blue-text",
         },

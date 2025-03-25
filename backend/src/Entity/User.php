@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
@@ -22,6 +24,17 @@ class User implements PasswordAuthenticatedUserInterface
 
     #[ORM\Column(length: 255)]
     private ?string $password = null;
+
+    /**
+     * @var Collection<int, Token>
+     */
+    #[ORM\OneToMany(targetEntity: Token::class, mappedBy: 'user')]
+    private Collection $value;
+
+    public function __construct()
+    {
+        $this->value = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -67,6 +80,36 @@ class User implements PasswordAuthenticatedUserInterface
     public function setPassword(string $password): static
     {
         $this->password = $password;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Token>
+     */
+    public function getValue(): Collection
+    {
+        return $this->value;
+    }
+
+    public function addValue(Token $value): static
+    {
+        if (!$this->value->contains($value)) {
+            $this->value->add($value);
+            $value->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeValue(Token $value): static
+    {
+        if ($this->value->removeElement($value)) {
+            // set the owning side to null (unless already changed)
+            if ($value->getUser() === $this) {
+                $value->setUser(null);
+            }
+        }
 
         return $this;
     }

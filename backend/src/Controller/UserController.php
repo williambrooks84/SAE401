@@ -60,4 +60,66 @@ class UserController extends AbstractController
         // Return a success response
         return new JsonResponse(['message' => 'User registered successfully.'], 201);
     }
+
+    #[Route('/users', name: 'user.login', methods: ['GET'])]
+    public function index (UserRepository $userRepository): JsonResponse
+    {
+        $users = $userRepository->findAll();
+        $data = [];
+
+        foreach ($users as $user) {
+            $data[] = [
+                'id' => $user->getId(),
+                'username' => $user->getUsername(),
+                'email' => $user->getEmail(),
+            ];
+        }
+
+        return new JsonResponse($data, 200);
+    }
+
+    #[Route('/update', name: 'user.update', methods: ['PATCH'])]
+    public function update(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        ValidatorInterface $validator,
+        UserRepository $userRepository,
+    ): JsonResponse {
+        $data = json_decode($request->getContent(), true);
+
+        // Validate input data
+        if (!isset($data['username']) || !isset($data['email'])) {
+            return new JsonResponse(['error' => 'Username and email are required.'], 400);
+        }
+
+        // Find the user by ID (assuming the ID is passed in the request)
+        if (!isset($data['id'])) {
+            return new JsonResponse(['error' => 'User ID is required.'], 400);
+        }
+
+        $user = $userRepository->find($data['id']);
+        if (!$user) {
+            return new JsonResponse(['error' => 'User not found.'], 404);
+        }
+
+        // Update user details
+        $user->setUsername($data['username']);
+        $user->setEmail($data['email']);
+
+        // Validate the updated user entity
+        $errors = $validator->validate($user);
+        if (count($errors) > 0) {
+            $errorMessages = [];
+            foreach ($errors as $error) {
+                $errorMessages[] = $error->getMessage();
+            }
+            return new JsonResponse(['errors' => $errorMessages], 400);
+        }
+
+        // Save changes to the database
+        $entityManager->flush();
+
+        return new JsonResponse(['message' => 'User updated successfully.'], 200);
+    }
+
 }

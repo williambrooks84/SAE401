@@ -104,8 +104,8 @@ export default function Signup() {
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen p-7 gap-6">
-            <h1 className="text-4xl md:text-5xl font-bold text-center text-green">Create an account</h1>
-            <div className="flex w-full flex-col gap-2">
+            <h1 className="text-4xl font-bold text-center text-green">Create an account</h1>
+            <div className="flex w-full flex-col gap-2 md:justify-center md:w-1/3 md:mx-auto">
                 <FormLabel label="Choose a username:" />
                 <FormBox
                     placeholder="Username"
@@ -137,14 +137,15 @@ export default function Signup() {
                     onChange={handleConfirmPasswordChange}
                 />
                 {confirmPasswordError && <span className="text-error">{confirmPasswordError}</span>}
+
+                {generalError && <span className="text-error">{generalError}</span>}
+                <Button variant="bluebgless" size="bgless" rounded="none" onClick={() => navigate('/login')}>
+                    Already have an account? Login here
+                </Button>
+                <Button variant="default" size="default" rounded="default" onClick={handleSignupClick}>
+                    Create account
+                </Button>
             </div>
-            {generalError && <span className="text-error">{generalError}</span>}
-            <Button variant="bluebgless" size="bgless" rounded="none" onClick={() => navigate('/login')}>
-                Already have an account? Login here
-            </Button>
-            <Button variant="default" size="default" rounded="default" onClick={handleSignupClick}>
-                Create account
-            </Button>
         </div>
     );
 }

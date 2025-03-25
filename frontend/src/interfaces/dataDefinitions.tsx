@@ -35,7 +35,19 @@ export interface TextAreaProps {
     rows?: number;
 }
 
+//LetterCounter
 export interface LetterCounterProps {
     value: string;
     limit: string;
+}
+
+//DashboardList
+export interface UserProps {
+    id: number;
+    username: string;
+    email: string;
+}
+
+export interface DashboardListProps {
+    onSelectUser: (id: string) => void; // Function to pass the selected user ID
 }
