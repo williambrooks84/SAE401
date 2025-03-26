@@ -23,15 +23,12 @@ security:
                 provider: app_user_provider
 
         main:
-            lazy: true
-            provider: app_user_provider
-            custom_authenticators:
-                - App\Security\AccessTokenHandler
+            access_token:
+                token_handler: App\Security\AccessTokenHandler
 
-    access_control:
-        #- { path: ^/login, roles: IS_AUTHENTICATED_ANONYMOUSLY }
-        - { path: ^/posts, roles: IS_AUTHENTICATED_ANONYMOUSLY, methods: [GET] }  
-        - { path: ^/posts, roles: IS_AUTHENTICATED_FULLY, methods: [POST] }
+    # access_control:
+    #     - { path: ^/posts, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+    #     - { path: ^/posts, roles: IS_AUTHENTICATED_FULLY, methods: [POST] }
 
 when@test:
     security:

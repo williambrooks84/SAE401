@@ -22,21 +22,21 @@ export default function Login() {
 
     const handleLoginClick = () => {
         let valid = true;
-   
+
         if (!validateEmail(email)) {
             setEmailError('Please enter a valid email address.');
             valid = false;
         } else {
             setEmailError('');
         }
-   
+
         if (password === '') {
             setPasswordError('Please enter your password.');
             valid = false;
         } else {
             setPasswordError('');
         }
-   
+
         if (valid) {
             fetch('http://localhost:8080/login', {
                 method: 'POST',
@@ -53,7 +53,12 @@ export default function Login() {
             })
             .then((data) => {
                 console.log('Login successful:', data);
-                navigate('/'); // Navigate to a dashboard or another page
+
+                // Save the access token to localStorage
+                localStorage.setItem('access_token', data.token);
+
+                // Optionally, redirect to a dashboard or home page
+                navigate('/'); // Redirect to the home page or another route after successful login
             })
             .catch((error) => {
                 console.error('Login error:', error);
@@ -62,7 +67,6 @@ export default function Login() {
             });
         }
     };
-   
 
     const navigate = useNavigate();
 

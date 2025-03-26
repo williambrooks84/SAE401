@@ -6,6 +6,8 @@ use App\Repository\TokenRepository;
 use Symfony\Component\Security\Core\Exception\BadCredentialsException;
 use Symfony\Component\Security\Http\AccessToken\AccessTokenHandlerInterface;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
+use Symfony\Component\HttpFoundation\Request;
+
 
 class AccessTokenHandler implements AccessTokenHandlerInterface
 {
@@ -16,18 +18,30 @@ class AccessTokenHandler implements AccessTokenHandlerInterface
 
     public function getUserBadgeFrom(string $accessToken): UserBadge
     {
-        // e.g. query the "access token" database to search for this token
+        // Find the token from the repository
         $accessToken = $this->repository->findOneByValue($accessToken);
-        if (null === $accessToken || !$accessToken->isValid()) {
+        
+        if (null === $accessToken || !$accessToken->getIsValid()) {
             throw new BadCredentialsException('Invalid credentials.');
         }
 
-        // Store the token in localhost (e.g., session or local storage)
-        $_SESSION['access_token'] = $accessToken->getValue();
+        // Return a UserBadge object containing the user identifier (e.g., user ID or email)
+        return new UserBadge($accessToken->getUser()->getEmail());
+    }
 
-        // and return a UserBadge object containing the user identifier from the found token
-        // (this is the same identifier used in Security configuration; it can be an email,
-        // a UUID, a username, a database ID, etc.)
-        return new UserBadge($accessToken->getUserId());
+    /**
+     * This method is called to check if the request contains an access token.
+     *
+     * @param Request $request
+     * @return bool|null
+     */
+    public function supports(Request $request): ?bool
+    {
+         // Exclude the /posts route from token handling
+         if ($request->getPathInfo() === '/posts') {
+              return false;
+         }
+
+         return $request->headers->has('Authorization') || $request->query->has('token');
     }
 }

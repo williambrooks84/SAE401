@@ -8,13 +8,30 @@ export default function Home() {
 
     useEffect(() => {
         async function fetchPosts() {
-            const response = await fetch('http://localhost:8080/posts');
-            const data = await response.json();
-            if (data && Array.isArray(data.posts)) {
-                setPosts(data.posts);
-            } else {
-                console.error("Fetched data does not contain a valid posts array:", data);
-            }
+            try {
+                const token = localStorage.getItem("access_token");
+          
+                if (!token) {
+                  throw new Error("No access token found");
+                }
+          
+                const response = await fetch("http://localhost:8080/posts?page=1", {
+                  method: "GET",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`, // Include token in the Authorization header
+                  },
+                });
+          
+                if (!response.ok) {
+                  throw new Error("Failed to fetch posts");
+                }
+          
+                const data = await response.json();
+                setPosts(data.posts); // Set the posts from the response
+              } catch (err: any) {
+                console.error("Error fetching posts:", err);
+              }
         }
 
         fetchPosts();
