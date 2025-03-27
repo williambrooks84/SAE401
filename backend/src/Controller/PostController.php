@@ -24,12 +24,22 @@ class PostController extends AbstractController
             return $this->json(['error' => 'No posts found'], JsonResponse::HTTP_NOT_FOUND);
         }
 
+        $posts = [];
+        foreach ($paginator as $post) {
+            $posts[] = [
+                'id' => $post->getId(),
+                'content' => $post->getContent(),
+                'created_at' => $post->getCreatedAt()->format('Y-m-d H:i:s'),
+                'username' => $post->getUser()->getUsername(),
+            ];
+        }
+
         $previousPage = $page > 1 ? $page - 1 : null;
         $totalPostsCount = $paginator->count();
-        $nextPage = ($totalPostsCount > $page * 1) ? $page + 1 : null;
+        $nextPage = ($totalPostsCount > $page * 5) ? $page + 1 : null;
 
         return $this->json([
-            'posts' => $paginator,
+            'posts' => $posts,
             'previous_page' => $previousPage,
             'next_page' => $nextPage
         ]);
@@ -44,13 +54,26 @@ class PostController extends AbstractController
             return new JsonResponse(['error' => 'Content is required'], 400);
         }
 
+        if (!$this->getUser()) {
+            return new JsonResponse(['error' => 'User not authenticated'], 401);
+        }
+
         $post = new Post();
         $post->setContent($data['content']);
         $post->setCreatedAt(new \DateTime());
+        $post->setUser($this->getUser());
 
         $entityManager->persist($post);
         $entityManager->flush();
 
-        return new JsonResponse(['message' => 'Post created successfully', 'post' => $post], 201);
+        return new JsonResponse([
+            'message' => 'Post created successfully',
+            'post' => [
+                'id' => $post->getId(),
+                'content' => $post->getContent(),
+                'created_at' => $post->getCreatedAt()->format('Y-m-d H:i:s'),
+                'username' => $post->getUser()->getUsername(),
+            ]
+        ], 201);
     }
 }

@@ -1,17 +1,24 @@
-import NavigationBar from "../ui/NavigationBar"
-import TextArea from "../ui/TextArea"
-import FormLabel from "../ui/FormLabel"
-import Button from "../ui/Button"
-import LetterCounter from "../ui/LetterCounter"
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import NavigationBar from "../ui/NavigationBar";
+import TextArea from "../ui/TextArea";
+import FormLabel from "../ui/FormLabel";
+import Button from "../ui/Button";
+import LetterCounter from "../ui/LetterCounter";
 
-export default function Publish(){
+export default function Publish() {
     const [post, setPost] = useState('');
     const [postError, setPostError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const token = localStorage.getItem("access_token");
+        if (!token) {
+            navigate("/login"); // Redirect to login page if no token
+        }
+    }, [navigate]);
 
     const handlePostChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const value = e.target.value;
@@ -33,10 +40,13 @@ export default function Publish(){
         setSuccessMessage('');
         setPostError('');
 
+        const token = localStorage.getItem("access_token");
+
         const response = await fetch("http://localhost:8080/posts", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify({ content: post }),
         });
@@ -82,5 +92,5 @@ export default function Publish(){
                 </div>
             </div>
         </>
-    )
+    );
 }
