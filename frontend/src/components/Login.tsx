@@ -36,13 +36,40 @@ export default function Login() {
         } else {
             setPasswordError('');
         }
+
+        if (valid) {
+            fetch('http://localhost:8080/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password }),
+            })
+            .then((response) => {
+                if (!response.ok) {
+                    return response.json().then((data) => {
+                        throw new Error(data.error || 'Login failed');
+                    });
+                }
+                return response.json();
+            })
+            .then((data) => {
+                // Save the access token to localStorage
+                localStorage.setItem('access_token', data.token);
+
+                // Optionally, redirect to a dashboard or home page
+                navigate('/'); // Redirect to the home page or another route after successful login
+            })
+            .catch((error) => {
+                setEmailError('');  // Clear previous email errors
+                setPasswordError(error.message || 'Login failed');
+            });
+        }
     };
 
     const navigate = useNavigate();
 
     return (
-        <div className="flex flex-col items-center justify-center p-7 gap-24">
-            <Logo src={logo} alt="logo" className=""/>
+        <div className="flex flex-col items-center justify-center min-h-screen p-7 gap-10 md:w-1/3 md:mx-auto">
+            <Logo src={logo} alt="logo"/>
             <div className="flex w-full flex-col gap-2">
                 <FormBox
                     placeholder="Email"

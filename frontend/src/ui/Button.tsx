@@ -5,7 +5,7 @@ import { ButtonProps } from "../interfaces/styleDefinitions";
 const buttonVariants = cva("rounded-md font-medium focus:outline-none", {
     variants: {
         variant: {
-            default: "bg-button-green text-button-green-text",
+            default: "bg-button-green hover:bg-button-green-hover text-button-green-text",
             greybgless: "text-button-grey-text",
             bluebgless: "text-button-blue-text",
         },
@@ -20,6 +20,14 @@ const buttonVariants = cva("rounded-md font-medium focus:outline-none", {
         },
         width: {
             default: "w-full",
+            fit: "w-fit",
+        },
+        padding:{
+            default: "px-5",
+            none: "px-0",
+        },
+        disabled:{
+            false: "false",
         }
     },
     defaultVariants: {
@@ -27,6 +35,7 @@ const buttonVariants = cva("rounded-md font-medium focus:outline-none", {
         size: "default",
         rounded: "default",
         width: "default",
+        padding: "none",
     },
 });
 
@@ -35,6 +44,7 @@ const Button = ({
     size,
     rounded,
     width,
+    padding,
     onClick,
     className,
     children,
@@ -42,7 +52,7 @@ const Button = ({
 }: ButtonProps) => {
     return (
         <button
-            className={cn(buttonVariants({ variant, size, rounded, width, className }))}
+            className={cn(buttonVariants({ variant, size, rounded, width, padding, className }))}
             onClick={onClick}
             {...props}
         >
