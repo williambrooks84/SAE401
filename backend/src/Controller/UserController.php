@@ -64,43 +64,65 @@ class UserController extends AbstractController
         // Return the user data (including username, email, etc.)
         return new JsonResponse([
             'user_id' => $user->getId(),
+            'role' => $user->getRoles(),
             'username' => $user->getUsername(),
             'email' => $user->getEmail(),
             'is_verified' => $user->getIsVerified(),
         ]);
     }
     
-
     #[Route('/update', name: 'user.update', methods: ['PATCH'])]
     public function update(
         Request $request,
         EntityManagerInterface $entityManager,
         ValidatorInterface $validator,
-        UserRepository $userRepository,
+        UserRepository $userRepository
     ): JsonResponse {
+        // Decode the JSON request content
         $data = json_decode($request->getContent(), true);
-
-        // Validate input data
-        if (!isset($data['username']) || !isset($data['email'])) {
-            return new JsonResponse(['error' => 'Username and email are required.'], 400);
+    
+        // Check if required fields (username, email, and ID) are present in the request
+        if (!isset($data['username']) || !isset($data['email']) || !isset($data['id'])) {
+            return new JsonResponse(['error' => 'Username, email, and ID are required.'], 400);
         }
-
-        // Find the user by ID (assuming the ID is passed in the request)
-        if (!isset($data['id'])) {
-            return new JsonResponse(['error' => 'User ID is required.'], 400);
-        }
-
-        $user = $userRepository->find($data['id']);
+    
+        // Ensure user is authenticated and has role 'ROLE_ADMIN'
+        $user = $this->getUser(); // Retrieve the authenticated user
+    
         if (!$user) {
+            return new JsonResponse(['error' => 'User not authenticated.'], 401);  // Unauthorized
+        }
+    
+        // Log the user roles for debugging purposes
+        error_log('User Roles: ' . implode(', ', $user->getRoles()));
+    
+        if (!in_array('ROLE_ADMIN', $user->getRoles())) {
+            return new JsonResponse(['error' => 'Access denied. Admins only.'], 403);
+        }
+    
+        // Find the user by ID
+        $userToUpdate = $userRepository->find($data['id']);
+        if (!$userToUpdate) {
             return new JsonResponse(['error' => 'User not found.'], 404);
         }
-
-        // Update user details
-        $user->setUsername($data['username']);
-        $user->setEmail($data['email']);
-
+    
+        // Check if the new username or email already exists in the database
+        $existingUserByUsername = $userRepository->findOneBy(['username' => $data['username']]);
+        if ($existingUserByUsername && $existingUserByUsername->getId() !== $userToUpdate->getId()) {
+            return new JsonResponse(['error' => 'Username is already taken.'], 400);
+        }
+    
+        $existingUserByEmail = $userRepository->findOneBy(['email' => $data['email']]);
+        if ($existingUserByEmail && $existingUserByEmail->getId() !== $userToUpdate->getId()) {
+            return new JsonResponse(['error' => 'Email is already taken.'], 400);
+        }
+    
+        // Update the user details (username and email)
+        $userToUpdate->setUsername($data['username']);
+        $userToUpdate->setEmail($data['email']);
+    
         // Validate the updated user entity
-        $errors = $validator->validate($user);
+        $errors = $validator->validate($userToUpdate);
         if (count($errors) > 0) {
             $errorMessages = [];
             foreach ($errors as $error) {
@@ -108,11 +130,13 @@ class UserController extends AbstractController
             }
             return new JsonResponse(['errors' => $errorMessages], 400);
         }
-
-        // Save changes to the database
+    
+        // Persist the changes to the database
         $entityManager->flush();
-
+    
+        // Return success response
         return new JsonResponse(['message' => 'User updated successfully.'], 200);
     }
+    
 
 }

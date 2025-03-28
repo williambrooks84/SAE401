@@ -59,7 +59,6 @@ export default function Login() {
                 navigate('/'); // Redirect to the home page or another route after successful login
             })
             .catch((error) => {
-                console.error('Login error:', error);
                 setEmailError('');  // Clear previous email errors
                 setPasswordError(error.message || 'Login failed');
             });

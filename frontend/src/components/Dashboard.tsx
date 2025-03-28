@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import DashboardHeader from "../ui/DashboardHeader";
 import DashboardList from "../ui/DashboardList";
 import FormLabel from "../ui/FormLabel";
@@ -11,6 +12,32 @@ export default function Dashboard() {
     const [newEmail, setNewEmail] = useState("");
     const [newUsernameError, setNewUsernameError] = useState('');
     const [newEmailError, setNewEmailError] = useState('');
+    const [isAdmin, setIsAdmin] = useState(false);
+    const navigate = useNavigate();
+
+    const token = localStorage.getItem("access_token");
+
+    useEffect(() => {
+        if (token) {
+            fetch("http://localhost:8080/token", {
+                method: "GET",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    if (data && data.role && data.role.includes("ROLE_ADMIN")) {
+                        setIsAdmin(true);
+                    } else {
+                        alert("Access denied. Admins only.");
+                        navigate("/"); // Redirect to home or login page
+                    }
+                });
+        } else {
+            navigate("/login"); // Redirect if no token
+        }
+    }, [token, navigate]);
 
     const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
@@ -44,37 +71,53 @@ export default function Dashboard() {
         }
     
         if (valid) {
-            fetch('http://localhost:8080/update', { // URL remains the same
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                id: selectedUserId,  // ✅ Send user ID
-                username: newUsername, 
-                email: newEmail 
-            }),
-            })
-            .then((response) => {
-            if (!response.ok) {
-                return response.json().then((data) => {
-                throw new Error(data.error || 'Update failed');
-                });
+            const token = localStorage.getItem("access_token"); // Get JWT token
+    
+            if (!token) {
+                alert("No token found, please log in again.");
+                return;
             }
-            return response.json();
+    
+            fetch('http://localhost:8080/update', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`, // Add Authorization header
+                },
+                body: JSON.stringify({
+                    id: selectedUserId,
+                    username: newUsername,
+                    email: newEmail
+                }),
+            })
+            .then(async (response) => {
+                const data = await response.json(); // Convert response to JSON
+                
+                if (!response.ok) {
+                    throw new Error(data.error || (data.errors ? data.errors.join(', ') : 'Update failed'));
+                }
+                return data;
             })
             .then(() => {
-            alert('Update complete!');
-            window.location.reload(); // Refresh the page
+                alert('User updated successfully!');
+                window.location.reload(); // Reload page
             })
-            .catch(() => {
-            alert('An error occurred while updating the user.');
+            .catch((error) => {
+                alert(`Error: ${error.message}`); // Display error messages
             });
         }
-    }    
+    };
     
+    
+
+    if (!isAdmin) {
+        return null; // Render nothing while checking admin status
+    }
+
     return (
         <div className="flex flex-col gap-4">
             <DashboardHeader />
-            <DashboardList onSelectUser={setSelectedUserId} /> {/* Pass function to get user ID */}
+            <DashboardList onSelectUser={setSelectedUserId} />
             <div className="flex flex-col p-6 gap-4 md:flex md:flex-col md:justify-center md:w-1/3 md:mx-auto">
                 <div className="flex flex-col gap-2">
                     <FormLabel label="Change username:" />
@@ -94,7 +137,7 @@ export default function Dashboard() {
                     />
                     {newEmailError && <span className="text-error">{newEmailError}</span>}
                 </div>
-                <div className="flex justify-center">
+                <div className="flex flex-col items-center justify-center gap-3">
                     <Button 
                         variant="default" 
                         size="default" 
@@ -105,6 +148,16 @@ export default function Dashboard() {
                     >
                         Confirm
                     </Button>
+
+                    <Button
+                        variant="greybgless"
+                        size="bgless"
+                        rounded="none"
+                        width="fit"
+                        onClick={() => navigate("/")}
+                    >
+                        Finished? Go back to the home
+                    </Button>    
                 </div>
             </div>
         </div>
