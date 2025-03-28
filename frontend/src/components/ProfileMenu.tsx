@@ -1,5 +1,6 @@
 import React from "react";
 import ProfileLogin from "./ProfileLogin";
+import ProfileLoggedIn from "./ProfileLoggedIn";
 import { CrossIcon } from "../assets/icons";
 import { ProfileMenuProps } from "../interfaces/styleDefinitions";
 
@@ -11,7 +12,7 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({ isVisible, onClose }) => {
             <button onClick={onClose} className="absolute top-3 left-3">
             <CrossIcon />
             </button>
-            <ProfileLogin />
+            {localStorage.getItem("access_token") ? <ProfileLoggedIn /> : <ProfileLogin />}
         </div>
     );
 };

@@ -146,7 +146,7 @@ export default function Signup() {
                 {generalError && <span className="text-error">{generalError}</span>}
 
                 {verificationMessage && <div className="text-green">{verificationMessage}</div>}
-                
+
                 <Button variant="bluebgless" size="bgless" rounded="none" onClick={() => navigate('/login')}>
                     Already have an account? Login here
                 </Button>

@@ -71,25 +71,25 @@ export default function Publish() {
     return (
         <>
             <NavigationBar />
-            <div className="bg-post-background rounded-4xl m-5 p-0.5 gap-3">
-                <div className="p-7">
-                    <h1 className="text-4xl font-semibold mb-2.5">Add a post</h1>
-                    <div className="flex flex-col justify-center gap-2">
-                        <FormLabel size="extralarge2" weight="medium" color="default" label="Enter your text here:" />
-                        <TextArea
-                            placeholder="Your text here..."
-                            value={post}
-                            onChange={(e) => handlePostChange(e as React.ChangeEvent<HTMLTextAreaElement>)}
-                            rows={5}
-                        />
-                        <LetterCounter value={post} limit="280"/>
-                        {postError && <span className="text-error">{postError}</span>}
-                        {successMessage && <span className="text-success">{successMessage}</span>}
-                    </div>
-                    <div className="flex justify-center mt-6">
-                        <Button width="fit" padding="default" onClick={handleSubmit} disabled={loading || post.length > 280 || post.trim() === ""}>Publish</Button>
-                    </div>
+            <div className="bg-post-background rounded-4xl m-5 p-0.5 gap-3 md:w-1/2 md:mx-auto">
+            <div className="p-7">
+                <h1 className="text-4xl font-semibold mb-2.5">Add a post</h1>
+                <div className="flex flex-col justify-center gap-2">
+                <FormLabel size="extralarge2" weight="medium" color="default" label="Enter your text here:" />
+                <TextArea
+                    placeholder="Your text here..."
+                    value={post}
+                    onChange={(e) => handlePostChange(e as React.ChangeEvent<HTMLTextAreaElement>)}
+                    rows={5}
+                />
+                <LetterCounter value={post} limit="280"/>
+                {postError && <span className="text-error">{postError}</span>}
+                {successMessage && <span className="text-success">{successMessage}</span>}
                 </div>
+                <div className="flex justify-center mt-6">
+                <Button width="fit" padding="default" onClick={handleSubmit} disabled={loading || post.length > 280 || post.trim() === ""}>Publish</Button>
+                </div>
+            </div>
             </div>
         </>
     );

@@ -52,8 +52,6 @@ export default function Login() {
                 return response.json();
             })
             .then((data) => {
-                console.log('Login successful:', data);
-
                 // Save the access token to localStorage
                 localStorage.setItem('access_token', data.token);
 

@@ -11,6 +11,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use App\Repository\TokenRepository;
 
 class UserController extends AbstractController
 {
@@ -23,6 +24,7 @@ class UserController extends AbstractController
         foreach ($users as $user) {
             $data[] = [
                 'id' => $user->getId(),
+                'roles' => $user->getRoles(),
                 'username' => $user->getUsername(),
                 'email' => $user->getEmail(),
                 'is_Verified' => $user->getIsVerified(),
@@ -31,6 +33,43 @@ class UserController extends AbstractController
 
         return new JsonResponse($data, 200);
     }
+
+    #[Route('/token', name: 'user.token', methods: ['GET'])]
+    public function getUserByToken(Request $request, TokenRepository $tokenRepository): JsonResponse
+    {
+        // Get the token from the Authorization header (it should be in the form of "Bearer <token>")
+        $authorizationHeader = $request->headers->get('Authorization');
+        
+        if (!$authorizationHeader) {
+            return new JsonResponse(['error' => 'Authorization header not found'], 400);
+        }
+    
+        // Extract the token from the "Bearer <token>" string
+        $token = str_replace('Bearer ', '', $authorizationHeader);
+    
+        // Look for the token in the database
+        $storedToken = $tokenRepository->findOneBy(['value' => $token]);
+    
+        if (!$storedToken) {
+            return new JsonResponse(['error' => 'Invalid token'], 401);
+        }
+    
+        // Get the user associated with the token
+        $user = $storedToken->getUser(); // Use getUser() instead of getUserId()
+    
+        if (!$user) {
+            return new JsonResponse(['error' => 'User not found'], 404);
+        }
+    
+        // Return the user data (including username, email, etc.)
+        return new JsonResponse([
+            'user_id' => $user->getId(),
+            'username' => $user->getUsername(),
+            'email' => $user->getEmail(),
+            'is_verified' => $user->getIsVerified(),
+        ]);
+    }
+    
 
     #[Route('/update', name: 'user.update', methods: ['PATCH'])]
     public function update(
