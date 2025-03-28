@@ -14,6 +14,7 @@ export default function Signup() {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [confirmPasswordError, setConfirmPasswordError] = useState('');
     const [generalError, setGeneralError] = useState('');
+    const [verificationMessage, setVerificationMessage] = useState('');
 
     const validateEmail = (email: string) => {
         const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -86,7 +87,11 @@ export default function Signup() {
             });
 
             if (response.ok) {
-                navigate('/login');
+                // Set verification message on successful signup
+                setVerificationMessage('User registered successfully. Please verify your email.');
+                setTimeout(() => {
+                    navigate('/login'); // Redirect to login after a short delay
+                }, 3000); // Redirect after 3 seconds
             } else {
                 const data = await response.json();
                 if (data.error === 'Email is already in use.') {
@@ -139,6 +144,9 @@ export default function Signup() {
                 {confirmPasswordError && <span className="text-error">{confirmPasswordError}</span>}
 
                 {generalError && <span className="text-error">{generalError}</span>}
+
+                {verificationMessage && <div className="text-green">{verificationMessage}</div>}
+                
                 <Button variant="bluebgless" size="bgless" rounded="none" onClick={() => navigate('/login')}>
                     Already have an account? Login here
                 </Button>

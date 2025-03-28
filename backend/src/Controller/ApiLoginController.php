@@ -37,6 +37,11 @@ final class ApiLoginController extends AbstractController
             return $this->json(['error' => 'User not found'], Response::HTTP_UNAUTHORIZED);
         }
 
+        // Check if the user is verified
+        if (!$user->getIsVerified()) {
+            return $this->json(['error' => 'Please verify your email address'], Response::HTTP_FORBIDDEN);
+        }
+
         // Validate password
         if (!$passwordHasher->isPasswordValid($user, $password)) {
             return $this->json(['error' => 'Invalid password'], Response::HTTP_UNAUTHORIZED);
@@ -50,7 +55,7 @@ final class ApiLoginController extends AbstractController
         // Return the response
         return $this->json([
             'user' => [
-                'id' => $user->getId(), // You can choose to return other info, but avoid exposing too much
+                'id' => $user->getId(),
             ],
             'token' => $token->getValue(),
         ]);
