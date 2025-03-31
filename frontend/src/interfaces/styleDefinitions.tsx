@@ -1,6 +1,6 @@
 //Button
 export interface ButtonProps {
-    variant?: "default" | "greybgless" | "bluebgless";
+    variant?: "default" | "greybgless" | "bluebgless" | "nobg" | "black";
     size?: "default" | "bgless";
     rounded?: "none" | "default" | "full";
     width?: "default" | "fit";
@@ -32,3 +32,10 @@ export interface ProfileMenuProps {
     onClose: () => void;
   }
   
+//Avatar
+export interface AvatarProps {
+    avatar: string;
+    username: string;
+    color?: "white" | "black";
+    className?: string;
+}

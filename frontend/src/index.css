@@ -14,6 +14,7 @@
     --color-blue: #1877F2;
     --color-light-grey: #C4C4C4;
     --color-mid-grey: #6B6868;
+    --color-dark-grey: #4B4B4B;
     
     /*Semantic Tokens*/
     --color-fg: var(--color-dark); 
@@ -37,6 +38,13 @@
     --color-button-green-text: var(--color-white);
     --color-button-grey-text: var(--color-light-grey);
     --color-button-blue-text: var(--color-blue);
+    --color-button-black-text: var(--color-black);
+    --color-button-black: var(--color-black);
+    --color-button-black-hover: var(--color-dark-grey);
+    --color-button-white-text: var(--color-white);
+
+    /*Profile Tokens*/
+    --color-banner-text: var(--color-white);
 
     /*Backoffice Tokens*/
     --color-header-bg: var(--color-green);

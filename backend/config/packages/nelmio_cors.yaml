@@ -7,9 +7,10 @@ nelmio_cors:
     paths:
         '^/posts': # Applies to /posts API
             allow_origin: ['http://localhost:8090']
-            allow_methods: ['GET', 'POST', 'OPTIONS']
+            allow_methods: ['GET', 'POST', 'OPTIONS', 'PUT', 'DELETE']
             allow_headers: ['Content-Type', 'Authorization']
         '^/update':  # Only applies to the /update route
             allow_origin: ['http://localhost:8090']
             allow_methods: ['GET', 'OPTIONS', 'POST', 'PATCH', 'PUT', 'DELETE']
             allow_headers: ['Content-Type', 'Authorization']
+             

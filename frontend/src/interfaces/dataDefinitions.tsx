@@ -16,6 +16,8 @@ export interface LogoProps {
 export interface PostProps {
     key: string;
     id: string;
+    user_id: string;
+    avatar: string;
     username: string;
     content: string;
     created_at: string;
@@ -24,6 +26,8 @@ export interface PostProps {
 //PostData
 export interface PostData {
     id: string;
+    user_id: string;
+    avatar: string;
     username: string;
     content: string;
     created_at: string;
@@ -52,4 +56,25 @@ export interface UserProps {
 
 export interface DashboardListProps {
     onSelectUser: (id: string) => void; // Function to pass the selected user ID
+}
+
+export interface ProfileProps {
+    username: string;
+    banner: string;
+    avatar: string;
+    location: string;
+    bio: string;
+    website: string;
+}
+
+export interface ProfileHeadProps {
+    username: string;
+    banner: string;
+    avatar: string;
+    location: string;
+    bio: string;
+    website: string;
+    isFollowing: boolean;
+    onFollowToggle: () => void;
+    isCurrentUser: boolean;
 }

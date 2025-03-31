@@ -48,7 +48,7 @@ export default function Home() {
         window.innerHeight + document.documentElement.scrollTop >=
         document.documentElement.offsetHeight - 100
       ) {
-        setPage((prevPage) => prevPage + 1); // Charger la page suivante
+        setPage((prevPage) => prevPage + 1); 
       }
     }
 
@@ -64,6 +64,8 @@ export default function Home() {
           <Post 
             key={`${post.id}-${index}`}
             id={post.id} 
+            user_id={post.user_id}
+            avatar={post.avatar}
             username={post.username}
             content={post.content} 
             created_at={post.created_at} 

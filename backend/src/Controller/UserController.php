@@ -137,6 +137,51 @@ class UserController extends AbstractController
         // Return success response
         return new JsonResponse(['message' => 'User updated successfully.'], 200);
     }
-    
 
+    #[Route('/logout', name: 'user.logout', methods: ['DELETE'])]
+    public function logout(Request $request, TokenRepository $tokenRepository, EntityManagerInterface $entityManager): JsonResponse
+    {
+        // Get the token from the Authorization header
+        $authorizationHeader = $request->headers->get('Authorization');
+        if (!$authorizationHeader) {
+            return new JsonResponse(['error' => 'Authorization header not found'], 400);
+        }
+
+        // Extract the token from the "Bearer <token>" string
+        $token = str_replace('Bearer ', '', $authorizationHeader);
+
+        // Find the token in the database
+        $storedToken = $tokenRepository->findOneBy(['value' => $token]);
+        if (!$storedToken) {
+            return new JsonResponse(['error' => 'Invalid token'], 401);
+        }
+
+        // Remove the token from the database
+        $entityManager->remove($storedToken);
+        $entityManager->flush();
+
+        // Return success response
+        return new JsonResponse(['message' => 'Logged out successfully.'], 200);
+    }
+
+    #[Route('/profile/{id}', name: 'user.profile', methods: ['GET'])]
+    public function getProfile(int $id, UserRepository $userRepository): JsonResponse
+    {
+        // Find the user by ID
+        $user = $userRepository->find($id);
+
+        if (!$user) {
+            return new JsonResponse(['error' => 'User not found.'], 404); // Not Found
+        }
+
+        return new JsonResponse([
+            'user_id' => $user->getId(),
+            'username' => $user->getUsername(),
+            'banner' => $user->getBanner(),
+            'avatar' => $user->getAvatar(),
+            'location' => $user->getLocation(),
+            'bio' => $user->getBio(),
+            'website' => $user->getWebsite(),
+        ]);
+    }
 }

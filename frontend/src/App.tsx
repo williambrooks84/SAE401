@@ -3,6 +3,7 @@ import Login from "./components/Login";
 import Signup from "./components/Signup";
 import Publish from "./components/Publish";
 import Dashboard from "./components/Dashboard";
+import Profile from "./components/Profile";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 export default function App() {
@@ -14,6 +15,7 @@ export default function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/publish" element={<Publish />}/>
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/profile/:userId" element={<Profile/>} />
       </Routes>
     </Router>
   )
