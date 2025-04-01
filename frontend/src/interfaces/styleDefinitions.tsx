@@ -2,6 +2,7 @@
 export interface ButtonProps {
     variant?: "default" | "greybgless" | "bluebgless" | "nobg" | "black";
     size?: "default" | "bgless";
+    textSize?: "small" | "default" | "large";
     rounded?: "none" | "default" | "full";
     width?: "default" | "fit";
     padding?: "default" | "none";

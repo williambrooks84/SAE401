@@ -48,11 +48,8 @@ export default function Post({ id, avatar, username, content, created_at, user_i
                 .then((data) => {
                     console.log(data.message);
                     // Optionally, trigger a state update or refresh the post list
-                })
-                .catch((error) => {
-                    console.error("Error deleting post:", error);
+                    document.getElementById(`post-${id}`)?.remove();
                 });
-                window.location.reload();
         }
     }
 

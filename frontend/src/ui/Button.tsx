@@ -15,6 +15,11 @@ const buttonVariants = cva("rounded-md font-medium focus:outline-none", {
             default: "h-12",
             bgless: "h-10",
         },
+        textSize: {
+            small: "text-sm",
+            default: "text-base",
+            large: "text-lg",
+        },
         rounded: {
             none: "rounded-none",
             default: "rounded-md",
@@ -35,6 +40,7 @@ const buttonVariants = cva("rounded-md font-medium focus:outline-none", {
     defaultVariants: {
         variant: "default",
         size: "default",
+        textSize: "default",
         rounded: "default",
         width: "default",
         padding: "none",
@@ -44,6 +50,7 @@ const buttonVariants = cva("rounded-md font-medium focus:outline-none", {
 const Button = ({
     variant,
     size,
+    textSize,
     rounded,
     width,
     padding,
@@ -54,7 +61,7 @@ const Button = ({
 }: ButtonProps) => {
     return (
         <button
-            className={cn(buttonVariants({ variant, size, rounded, width, padding, className }))}
+            className={cn(buttonVariants({ variant, size, textSize, rounded, width, padding, className }))}
             onClick={onClick}
             {...props}
         >
