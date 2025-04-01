@@ -4,6 +4,7 @@ import Logo from "../ui/Logo";
 import logo from "../assets/logo-temp.png";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
     const [email, setEmail] = useState('');
@@ -11,14 +12,10 @@ export default function Login() {
     const [emailError, setEmailError] = useState('');
     const [passwordError, setPasswordError] = useState('');
 
-    const validateEmail = (email: string) => {
-        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return re.test(email);
-    };
+    const { login } = useAuth(); // Get login function from context
+    const navigate = useNavigate();
 
-    const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setEmail(e.target.value);
-    };
+    const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
     const handleLoginClick = () => {
         let valid = true;
@@ -52,36 +49,25 @@ export default function Login() {
                 return response.json();
             })
             .then((data) => {
-                // Save the access token to localStorage
-                localStorage.setItem('access_token', data.token);
+                login(data.token); // Store token in Auth Context
 
-                // Optionally, redirect to a dashboard or home page
-                navigate('/'); // Redirect to the home page or another route after successful login
+                // Redirect to home page
+                navigate('/');
             })
             .catch((error) => {
-                setEmailError('');  // Clear previous email errors
+                setEmailError('');
                 setPasswordError(error.message || 'Login failed');
             });
         }
     };
 
-    const navigate = useNavigate();
-
     return (
         <div className="flex flex-col items-center justify-center min-h-screen p-7 gap-10 md:w-1/3 md:mx-auto">
             <Logo src={logo} alt="logo"/>
             <div className="flex w-full flex-col gap-2">
-                <FormBox
-                    placeholder="Email"
-                    value={email}
-                    onChange={handleEmailChange}
-                />
+                <FormBox placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
                 {emailError && <span className="text-error">{emailError}</span>}
-                <FormBox
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                />
+                <FormBox placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
                 {passwordError && <span className="text-error">{passwordError}</span>}
             </div>
             <Button variant="default" size="default" rounded="default" onClick={handleLoginClick}>
