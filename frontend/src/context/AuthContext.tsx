@@ -1,17 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-
-// Extend the AuthContextType to include `user`
-interface User {
-  username: string;
-  userId: string;
-}
-
-interface AuthContextType {
-  token: string | null;
-  user: User | null;  // Add user object to context
-  login: (token: string, user: User) => void;  // Accept user object when logging in
-  logout: () => void;
-}
+import { User, AuthContextType } from "../interfaces/dataDefinitions"; 
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -48,10 +36,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
+    if (token) {
+      fetch("http://localhost:8080/logout", {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error("Failed to log out.");
+          }
+        })
+        .catch((error) => console.error("Logout error:", error));
+    }
+  
     localStorage.removeItem("access_token");
     setToken(null);
-    setUser(null);  // Clear user data during logout
+    setUser(null);
   };
+  
 
   return (
     <AuthContext.Provider value={{ token, user, login, logout }}>

@@ -3,13 +3,13 @@
 namespace App\Controller;
 
 use App\Entity\Post;
+use App\Entity\Like;
 use App\Repository\PostRepository;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use App\Entity\User;
 
 class PostController extends AbstractController
 {
@@ -123,5 +123,87 @@ class PostController extends AbstractController
         $entityManager->flush();
 
         return new JsonResponse(['message' => 'Post deleted successfully']);
+    }
+
+    #[Route('/posts/{id}/like', name: 'posts.like', methods: ['POST'])]
+    public function likePost(int $id, PostRepository $postRepository, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $post = $postRepository->find($id);
+
+        if (!$post) {
+            return new JsonResponse(['error' => 'Post not found'], 404);
+        }
+
+        // Check if user already liked the post (we can use a many-to-many relation with a `Like` entity)
+        $user = $this->getUser(); // Assuming user is authenticated and can be retrieved this way
+
+        // Check if the user already liked the post
+        $existingLike = $post->getLikes()->filter(function($like) use ($user) {
+            return $like->getUser() === $user;
+        })->first();
+
+        if ($existingLike) {
+            return new JsonResponse(['error' => 'You already liked this post'], 400);
+        }
+
+        $like = new Like();
+        $like->setUser($user);
+        $like->setPost($post);
+
+        $entityManager->persist($like);
+        $entityManager->flush();
+
+        return new JsonResponse(['message' => 'Post liked successfully']);
+    }
+
+    // Unlike a post
+    #[Route('/posts/{id}/unlike', name: 'posts.unlike', methods: ['DELETE'])]
+    public function unlikePost(int $id, PostRepository $postRepository, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $post = $postRepository->find($id);
+
+        if (!$post) {
+            return new JsonResponse(['error' => 'Post not found'], 404);
+        }
+
+        $user = $this->getUser(); // Assuming user is authenticated
+
+        $existingLike = $post->getLikes()->filter(function($like) use ($user) {
+            return $like->getUser() === $user;
+        })->first();
+
+        if (!$existingLike) {
+            return new JsonResponse(['error' => 'You have not liked this post'], 400);
+        }
+
+        $entityManager->remove($existingLike);
+        $entityManager->flush();
+
+        return new JsonResponse(['message' => 'Post unliked successfully']);
+    }
+
+    #[Route('/posts/{id}/like-status', name: 'posts.like_status', methods: ['GET'])]
+    public function getLikeStatus(int $id, PostRepository $postRepository): JsonResponse
+    {
+        // Fetch the post by its ID
+        $post = $postRepository->find($id);
+
+        if (!$post) {
+            return new JsonResponse(['error' => 'Post not found'], 404);
+        }
+
+        // Get the number of likes for the post (assuming `getLikes` returns a collection of likes related to the post)
+        $likeCount = count($post->getLikes());
+
+        // You can also check if the current user liked the post, if needed:
+        $user = $this->getUser();
+        $userLiked = $post->getLikes()->filter(function ($like) use ($user) {
+            return $like->getUser() === $user;
+        })->isEmpty() ? false : true; // Whether the current user has liked the post
+
+        return new JsonResponse([
+            'like_count' => $likeCount,
+            'liked' => $userLiked,
+        ]);
     }
 }

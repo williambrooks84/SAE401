@@ -1,3 +1,16 @@
+// Extend the AuthContextType to include `user`
+export interface User {
+    username: string;
+    userId: string;
+}
+
+export interface AuthContextType {
+    token: string | null;
+    user: User | null;  // Add user object to context
+    login: (token: string, user: User) => void;  // Accept user object when logging in
+    logout: () => void;
+}
+
 //FormBox
 export interface FormBoxProps {
     placeholder?: string;
