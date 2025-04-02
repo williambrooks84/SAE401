@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\User;
+use App\Entity\Follow;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -164,24 +165,162 @@ class UserController extends AbstractController
         return new JsonResponse(['message' => 'Logged out successfully.'], 200);
     }
 
-    #[Route('/profile/{id}', name: 'user.profile', methods: ['GET'])]
-    public function getProfile(int $id, UserRepository $userRepository): JsonResponse
+    #[Route('/profile/{id}', name: 'profile.get', methods: ['GET'])]
+    public function getProfile(int $id, UserRepository $userRepository, EntityManagerInterface $entityManager): JsonResponse
     {
-        // Find the user by ID
         $user = $userRepository->find($id);
 
         if (!$user) {
-            return new JsonResponse(['error' => 'User not found.'], 404); // Not Found
+            return new JsonResponse(['error' => 'User not found'], 404);
         }
 
+        // Get follower count
+        $followerCount = count($entityManager->getRepository(Follow::class)->findBy(['followed' => $user]));
+
+        // Get following count
+        $followingCount = count($entityManager->getRepository(Follow::class)->findBy(['follower' => $user]));
+
         return new JsonResponse([
-            'user_id' => $user->getId(),
             'username' => $user->getUsername(),
             'banner' => $user->getBanner(),
             'avatar' => $user->getAvatar(),
             'location' => $user->getLocation(),
             'bio' => $user->getBio(),
             'website' => $user->getWebsite(),
+            'follower_count' => $followerCount,
+            'following_count' => $followingCount,
         ]);
+    }
+
+    #[Route('/users/{id}/follow', name: 'users.follow', methods: ['POST'])]
+    public function followUser(int $id, UserRepository $userRepository, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $userToFollow = $userRepository->find($id);
+
+        if (!$userToFollow) {
+            return new JsonResponse(['error' => 'User not found'], 404);
+        }
+
+        $currentUser = $this->getUser(); // Assuming user is authenticated and can be retrieved this way
+
+        if ($currentUser === $userToFollow) {
+            return new JsonResponse(['error' => 'You cannot follow yourself'], 400);
+        }
+
+        // Check if the current user is already following the target user
+        $existingFollow = $entityManager->getRepository(Follow::class)->findOneBy([
+            'follower' => $currentUser,
+            'followed' => $userToFollow,
+        ]);
+
+        if ($existingFollow) {
+            return new JsonResponse(['error' => 'You are already following this user'], 400);
+        }
+
+        // Create a new follow relationship
+        $follow = new Follow();
+        $follow->setFollower($currentUser);
+        $follow->setFollowed($userToFollow);
+
+        $entityManager->persist($follow);
+        $entityManager->flush();
+
+        return new JsonResponse(['message' => 'User followed successfully']);
+    }
+
+    #[Route('/users/{id}/unfollow', name: 'users.unfollow', methods: ['DELETE'])]
+    public function unfollowUser(int $id, UserRepository $userRepository, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $userToUnfollow = $userRepository->find($id);
+
+        if (!$userToUnfollow) {
+            return new JsonResponse(['error' => 'User not found'], 404);
+        }
+
+        $currentUser = $this->getUser(); // Assuming user is authenticated and can be retrieved this way
+
+        // Check if the current user is following the target user
+        $existingFollow = $entityManager->getRepository(Follow::class)->findOneBy([
+            'follower' => $currentUser,
+            'followed' => $userToUnfollow,
+        ]);
+
+        if (!$existingFollow) {
+            return new JsonResponse(['error' => 'You are not following this user'], 400);
+        }
+
+        // Remove the follow relationship
+        $entityManager->remove($existingFollow);
+        $entityManager->flush();
+
+        return new JsonResponse(['message' => 'User unfollowed successfully']);
+    }
+
+    #[Route('/users/{id}/followers', name: 'users.followers', methods: ['GET'])]
+    public function getFollowers(int $id, UserRepository $userRepository): JsonResponse
+    {
+        $user = $userRepository->find($id);
+
+        if (!$user) {
+            return new JsonResponse(['error' => 'User not found'], 404);
+        }
+
+        $followers = $user->getFollowers();
+
+        $followerData = [];
+        foreach ($followers as $follow) {
+            $follower = $follow->getFollower(); // Assuming Follow entity has a getFollower() method
+            $followerData[] = [
+                'id' => $follower->getId(),
+                'username' => $follower->getUsername(),
+                'email' => $follower->getEmail(),
+            ];
+        }
+
+        return new JsonResponse($followerData, 200);
+    }
+
+    #[Route('/users/{id}/following', name: 'users.following', methods: ['GET'])]
+    public function getFollowing(int $id, UserRepository $userRepository): JsonResponse
+    {
+        $user = $userRepository->find($id);
+
+        if (!$user) {
+            return new JsonResponse(['error' => 'User not found'], 404);
+        }
+
+        $following = $user->getFollowing();
+
+        $followerData = [];
+        foreach ($following as $followingUser) {
+            $followerData[] = [
+                'id' => $followingUser->getId(),
+                'username' => $followingUser->getUsername(),
+                'email' => $followingUser->getEmail(),
+                'total_followers' => count($following),
+            ];
+        }
+
+        return new JsonResponse($followerData, 200);
+    }
+    
+    #[Route('/users/isFollowing/{id}', name: 'users.isfollowing', methods: ['GET'])]
+    public function isFollowing(int $id, UserRepository $userRepository, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $userToCheck = $userRepository->find($id);
+
+        if (!$userToCheck) {
+            return new JsonResponse(['error' => 'User not found'], 404);
+        }
+
+        $currentUser = $this->getUser(); // Assuming user is authenticated and can be retrieved this way
+
+        // Check if the current user is following the target user
+        $existingFollow = $entityManager->getRepository(Follow::class)->findOneBy([
+            'follower' => $currentUser,
+            'followed' => $userToCheck,
+        ]);
+
+        return new JsonResponse(['is_following' => (bool)$existingFollow]);
     }
 }

@@ -281,6 +281,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function isFollowing(User $user): bool
     {
-        return $this->following->contains($user);
+        foreach ($this->following as $follow) {
+            if ($follow->getFollowed() === $user) {
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -29,8 +29,7 @@ export default function Post({ id, avatar, username, content, created_at, user_i
       .then((data) => {
         setLikeCount(data.like_count || 0); // Always set like count
         if (token) setLiked(data.liked); // Only set liked status if logged in
-      })
-      .catch((error) => console.error("Failed to fetch like status:", error));
+      });
   }, [id, token]);
 
   // Handle like/unlike functionality
@@ -52,11 +51,6 @@ export default function Post({ id, avatar, username, content, created_at, user_i
       .then((response) => {
         if (!response.ok) throw new Error(`Failed to ${newLiked ? "like" : "unlike"} the post.`);
         return response.json();
-      })
-      .catch((error) => {
-        console.error(error);
-        setLiked(!newLiked);
-        setLikeCount((prev) => prev + (newLiked ? -1 : 1)); // Revert count on error
       });
   };
   
@@ -80,24 +74,30 @@ export default function Post({ id, avatar, username, content, created_at, user_i
     }
   };
 
+  function NavigateToProfile() {
+    window.location.href = `/profile/${user_id}`;
+  }
+
   return (
     <div className="flex flex-col p-5 gap-4 w-full md:w-1/2 rounded-4xl bg-post-background">
-      <Avatar avatar={avatar} username={username} color="black" />
+      <div className="cursor-pointer" onClick={NavigateToProfile}>
+        <Avatar avatar={avatar} username={username} color="black" />
+      </div>
       <div>
-        <p className="text-xl text-post-text">{content}</p>
-        <hr className="my-4 border-post-grey" />
-        <div className="flex flex-row justify-between items-center">
-          <DateTime date={created_at} />
-          <LikeCounter likesCount={likeCount} />
-          <div className="flex flex-row justify-center items-center gap-2">
-            {String(userId) === String(user_id) && (
-              <div className="cursor-pointer" onClick={handleDeletePost}>
-                <DeleteIcon className="cursor-pointer" />
-              </div>
-            )}
-            <Like liked={liked} setLiked={handleLike} />
+      <p className="text-xl text-post-text">{content}</p>
+      <hr className="my-4 border-post-grey" />
+      <div className="flex flex-row justify-between items-center">
+        <DateTime date={created_at} />
+        <LikeCounter likesCount={likeCount} />
+        <div className="flex flex-row justify-center items-center gap-2">
+        {String(userId) === String(user_id) && (
+          <div className="cursor-pointer" onClick={handleDeletePost}>
+          <DeleteIcon className="cursor-pointer" />
           </div>
+        )}
+        <Like liked={liked} setLiked={handleLike} />
         </div>
+      </div>
       </div>
     </div>
   );

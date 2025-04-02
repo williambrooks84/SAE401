@@ -2,6 +2,7 @@ import { LocationIcon, LinkIcon } from "../assets/icons";
 import { ProfileHeadProps } from "../interfaces/dataDefinitions";
 import Button from "../ui/Button";
 import Avatar from "../ui/Avatar";
+import FollowerCounter from "../ui/FollowerCounter";
 
 export default function ProfileHead({
     username,
@@ -10,6 +11,8 @@ export default function ProfileHead({
     location,
     bio,
     website,
+    followerCount,
+    followingCount,
     isFollowing,
     onFollowToggle,
     isCurrentUser,
@@ -37,6 +40,7 @@ export default function ProfileHead({
                         {website}
                     </a>
                 </div>
+                <FollowerCounter followerCount={followerCount} followingCount={followingCount} />
             </div>
 
             {!isCurrentUser && (

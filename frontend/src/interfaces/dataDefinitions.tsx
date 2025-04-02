@@ -78,6 +78,8 @@ export interface ProfileProps {
     location: string;
     bio: string;
     website: string;
+    followerCount: number;
+    followingCount: number;
 }
 
 export interface ProfileHeadProps {
@@ -88,6 +90,8 @@ export interface ProfileHeadProps {
     bio: string;
     website: string;
     isFollowing: boolean;
+    followerCount: number;
+    followingCount: number;
     onFollowToggle: () => void;
     isCurrentUser: boolean;
 }

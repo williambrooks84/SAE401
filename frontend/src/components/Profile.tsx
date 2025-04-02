@@ -30,10 +30,11 @@ export default function Profile() {
               location: data.location,
               bio: data.bio,
               website: data.website,
+              followerCount: data.follower_count,
+              followingCount: data.following_count,
             });
           }
-        })
-        .catch((error) => console.error("Error fetching profile data:", error));
+        });
     }
   }, [userId]);
 
@@ -46,15 +47,14 @@ export default function Profile() {
           setPosts(data.posts || []);
           setHasMore((data.posts || []).length > 0);
         })
-        .catch((error) => console.error("Error fetching posts:", error))
         .finally(() => setLoading(false));
     }
   }, [userId]);
 
   function handleFollowToggle() {
     if (token) {
-      fetch(`http://localhost:8080/${isFollowing ? "unfollow" : "follow"}/${userId}`, {
-        method: "POST",
+      fetch(`http://localhost:8080/users/${userId}/${isFollowing ? "unfollow" : "follow"}`, {
+        method: isFollowing ? "DELETE" : "POST",
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -62,18 +62,50 @@ export default function Profile() {
       })
         .then((response) => {
           if (response.ok) {
-            setIsFollowing(!isFollowing);
+            setIsFollowing((prevState) => !prevState);
+            setProfileData((prevData) => {
+              if (!prevData) return null; // Ensure prevData exists
+              return {
+                ...prevData,
+                followerCount: isFollowing
+                  ? prevData.followerCount - 1
+                  : prevData.followerCount + 1, // Update count locally
+              };
+            });
           } else {
-            console.error("Error toggling follow state");
+            response.json().then((data) => {
+              console.error(data.error || "An error occurred");
+            });
           }
         })
-        .catch((error) => console.error("Error:", error));
+        .catch((error) => {
+          console.error("Network error:", error);
+        });
     }
   }
+  
+
+  useEffect(() => {
+    if (userId && token) {
+      fetch(`http://localhost:8080/users/isFollowing/${userId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data && typeof data.is_following === "boolean") {
+            setIsFollowing(data.is_following); // Corrected key name
+          }
+        })
+        .catch((error) => console.error("Error fetching follow status:", error));
+    }
+  }, [userId, token]);
 
   if (!profileData) {
     return <p>Loading...</p>;
   }
+
 
   return (
     <div className="flex flex-col gap-2 items-center">
@@ -88,6 +120,8 @@ export default function Profile() {
           bio={profileData.bio}
           website={profileData.website}
           isFollowing={isFollowing}
+          followerCount={profileData.followerCount}
+          followingCount={profileData.followingCount}
           onFollowToggle={handleFollowToggle}
           isCurrentUser={String(userId) === String(connectedUserId)} // Compare userIds correctly
         />
