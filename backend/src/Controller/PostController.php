@@ -4,7 +4,9 @@ namespace App\Controller;
 
 use App\Entity\Post;
 use App\Entity\Like;
+use App\Entity\User;
 use App\Repository\PostRepository;
+use App\Repository\UserRepository;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
@@ -212,6 +214,9 @@ class PostController extends AbstractController
 
         // You can also check if the current user liked the post, if needed:
         $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->json(['error' => 'User not authenticated'], JsonResponse::HTTP_UNAUTHORIZED);
+        }
         $userLiked = $post->getLikes()->filter(function ($like) use ($user) {
             return $like->getUser() === $user;
         })->isEmpty() ? false : true; // Whether the current user has liked the post
@@ -221,4 +226,43 @@ class PostController extends AbstractController
             'liked' => $userLiked,
         ]);
     }
+
+    #[Route('/posts/following', name: 'posts.following', methods: ['GET'])]
+    public function getPostsByFollowing(PostRepository $postRepository, UserRepository $userRepository): JsonResponse {
+        $user = $this->getUser();
+        if (!$user) {
+            return $this->json(['error' => 'User not authenticated'], JsonResponse::HTTP_UNAUTHORIZED);
+        }
+
+        // Fetch followed user IDs
+        $followedUserIds = $userRepository->findFollowedUserIds($user);
+
+        // Debug: Check if user is following anyone
+        if (empty($followedUserIds)) {
+            return $this->json(['posts' => []]);
+        }
+
+        // Fetch posts from followed users
+        $posts = $postRepository->findByUsers($followedUserIds);
+
+        $response = array_map(function ($post) {
+            $user = $post->getUser();
+            return [
+                'id' => $post->getId(),
+                'user_id' => $user->getId(),
+                'content' => $post->getContent(),
+                'created_at' => $post->getCreatedAt()->format('Y-m-d H:i:s'),
+                'avatar' => $user->getAvatar(),
+                'username' => $user->getUsername(),
+                'is_blocked' => in_array('ROLE_USER_BLOCKED', $user->getRoles()),
+            ];
+        }, $posts);
+
+        return $this->json([
+            'posts' => $response,
+            'user_id' => $user instanceof User ? $user->getId() : null
+        ]);
+    }
+
+    
 }

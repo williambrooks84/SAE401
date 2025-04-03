@@ -47,7 +47,10 @@ export default function Home() {
 
       const filteredPosts = data.posts.filter((post: PostData) => post.is_blocked !== true);
 
-      setPosts((prevPosts) => [...prevPosts, ...filteredPosts]);
+      setPosts((prevPosts) => {
+        const postIds = new Set(prevPosts.map((post) => post.id));
+        return [...prevPosts, ...filteredPosts.filter((post: PostData) => !postIds.has(post.id))];
+      });
 
       if (data.next_page) {
         setNextPage(data.next_page);
@@ -58,10 +61,8 @@ export default function Home() {
       setLoading(false);
     }
 
-    if (nextPage !== null) {
-      fetchPosts();
-    }
-  }, [nextPage, loading, hasMore]); 
+    fetchPosts();
+  }, [nextPage]); 
 
 
   useEffect(() => {

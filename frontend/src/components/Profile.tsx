@@ -19,12 +19,9 @@ export default function Profile() {
   useEffect(() => {
     if (!userId) return;
 
-    console.log("Fetching profile data for userId:", userId);
-
     fetch(`http://localhost:8080/profile/${userId}`)
       .then((response) => response.json())
       .then((data) => {
-        console.log("Fetched profile data:", data);
         if (data) {
           setProfileData({
             username: data.username,
@@ -35,7 +32,7 @@ export default function Profile() {
             website: data.website,
             followerCount: data.follower_count,
             followingCount: data.following_count,
-            is_blocked: data.is_blocked, // Add blocked status
+            is_blocked: data.is_blocked,
           });
         }
       });
@@ -43,36 +40,27 @@ export default function Profile() {
 
   // Fetch posts only if the user is NOT blocked
   useEffect(() => {
-    if (!userId || !profileData) return; // Ensure profileData is loaded
+    if (!userId || !profileData) return;
 
-    console.log("Checking profileData.is_blocked:", profileData.is_blocked);
-
-    // If the user is blocked, clear posts immediately and don't fetch
     if (profileData.is_blocked) {
-      console.log("User is blocked, clearing posts...");
-      setPosts([]); // Clear posts immediately
+      setPosts([]);
       return;
     }
 
-    console.log("Fetching posts for userId:", userId);
     setLoading(true);
     fetch(`http://localhost:8080/posts/user/${userId}`)
       .then((response) => response.json())
       .then((data) => {
-        console.log("Fetched posts for userId:", userId, "Posts:", data.posts);
         setPosts(data.posts || []);
       })
       .finally(() => {
         setLoading(false);
-        console.log("Finished fetching posts for userId:", userId);
       });
-  }, [userId, profileData]); // Depend on profileData
+  }, [userId, profileData]);
 
   // Follow/unfollow logic
   function handleFollowToggle() {
     if (!token) return;
-
-    console.log("Toggling follow/unfollow for userId:", userId);
 
     fetch(`http://localhost:8080/users/${userId}/${isFollowing ? "unfollow" : "follow"}`, {
       method: isFollowing ? "DELETE" : "POST",
@@ -93,21 +81,14 @@ export default function Profile() {
   useEffect(() => {
     if (!userId || !token) return;
 
-    console.log("Checking follow status for userId:", userId);
-
     fetch(`http://localhost:8080/users/isFollowing/${userId}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((response) => response.json())
       .then((data) => {
-        console.log("Follow status for userId:", userId, "Is Following:", data.is_following);
         setIsFollowing(data.is_following);
       });
   }, [userId, token]);
-
-  // Debug log to check profile data and posts state
-  console.log("Profile Data:", profileData);
-  console.log("Posts State:", posts);
 
   if (!profileData) return <p>Loading...</p>;
 
