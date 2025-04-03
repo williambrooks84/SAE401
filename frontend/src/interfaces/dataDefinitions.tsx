@@ -34,6 +34,7 @@ export interface PostProps {
     username: string;
     content: string;
     created_at: string;
+    is_blocked?: boolean;
 }
 
 //PostData
@@ -44,6 +45,7 @@ export interface PostData {
     username: string;
     content: string;
     created_at: string;
+    is_blocked?: boolean;
 }
 
 //TextArea
@@ -80,6 +82,7 @@ export interface ProfileProps {
     website: string;
     followerCount: number;
     followingCount: number;
+    is_blocked: boolean; 
 }
 
 export interface ProfileHeadProps {

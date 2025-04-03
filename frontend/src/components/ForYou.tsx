@@ -4,7 +4,7 @@ import { PostData } from "../interfaces/dataDefinitions";
 import NavigationBar from "../ui/NavigationBar";
 import Button from "../ui/Button";
 
-export default function Home() {
+export default function ForYou() {
   const [posts, setPosts] = useState<PostData[]>([]);
   const [nextPage, setNextPage] = useState<number | null>(1); 
   const [hasMore, setHasMore] = useState(true); 

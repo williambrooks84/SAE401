@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\User;
+use App\Entity\Post;
 use App\Entity\Follow;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -189,6 +190,7 @@ class UserController extends AbstractController
             'website' => $user->getWebsite(),
             'follower_count' => $followerCount,
             'following_count' => $followingCount,
+            'is_blocked' => in_array('ROLE_USER_BLOCKED', $user->getRoles()),
         ]);
     }
 
@@ -323,4 +325,32 @@ class UserController extends AbstractController
 
         return new JsonResponse(['is_following' => (bool)$existingFollow]);
     }
+
+    #[Route('/users/block/{id}', name: 'users.block', methods: ['PATCH'])]
+    public function blockUser(int $id, UserRepository $userRepository, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $user = $this->getUser();
+
+        if (!$user || !in_array('ROLE_ADMIN', $user->getRoles())) {
+            return new JsonResponse(['error' => 'Access denied. Admins only.'], 403);
+        }
+
+        $userToBlock = $userRepository->find($id);
+        if (!$userToBlock) {
+            return new JsonResponse(['error' => 'User not found.'], 404);
+        }
+
+        $roles = $userToBlock->getRoles();
+        if (in_array('ROLE_USER_BLOCKED', $roles)) {
+            return new JsonResponse(['error' => 'User is already blocked.'], 400);
+        }
+
+        $roles[] = 'ROLE_USER_BLOCKED'; // Ajouter le rôle bloqué
+        $userToBlock->setRoles(array_unique($roles));
+
+        $entityManager->flush();
+
+        return new JsonResponse(['message' => 'User blocked successfully.'], 200);
+    }
+
 }

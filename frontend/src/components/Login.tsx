@@ -19,21 +19,21 @@ export default function Login() {
 
     const handleLoginClick = () => {
         let valid = true;
-
+    
         if (!validateEmail(email)) {
             setEmailError('Please enter a valid email address.');
             valid = false;
         } else {
             setEmailError('');
         }
-
+    
         if (password === '') {
             setPasswordError('Please enter your password.');
             valid = false;
         } else {
             setPasswordError('');
         }
-
+    
         if (valid) {
             fetch('http://localhost:8080/login', {
                 method: 'POST',
@@ -49,8 +49,16 @@ export default function Login() {
                 return response.json();
             })
             .then((data) => {
-                login(data.token); // Store token in Auth Context
-
+                // Check if user has the "ROLE_USER_BLOCKED"
+                const userRoles = data.user.roles || [];
+                if (userRoles.includes("ROLE_USER_BLOCKED")) {
+                    setEmailError('Your account has been blocked due to violation of the terms of service. Please contact support.');
+                    navigate("/contact-support"); // Redirect to a support/contact page for blocked users
+                    return; // Stop further execution
+                }
+    
+                login(data.token, data.user); // Store token and user in Auth Context
+    
                 // Redirect to home page
                 navigate('/');
             })
@@ -60,6 +68,7 @@ export default function Login() {
             });
         }
     };
+    
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen p-7 gap-10 md:w-1/3 md:mx-auto">

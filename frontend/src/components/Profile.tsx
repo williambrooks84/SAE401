@@ -4,134 +4,154 @@ import NavigationBar from "../ui/NavigationBar";
 import Post from "./Post";
 import { PostData, ProfileProps } from "../interfaces/dataDefinitions";
 import ProfileHead from "./ProfileHead";
-import { useAuth } from "../context/AuthContext"; // Import useAuth
+import { useAuth } from "../context/AuthContext";
 
 export default function Profile() {
   const { userId } = useParams<{ userId: string }>();
   const [profileData, setProfileData] = useState<ProfileProps | null>(null);
   const [posts, setPosts] = useState<PostData[]>([]);
   const [loading, setLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
   const [isFollowing, setIsFollowing] = useState(false);
+  const { user, token } = useAuth();
+  const connectedUserId = user?.userId;
 
-  const { user, token } = useAuth();  // Use the user and token from AuthContext
-  const connectedUserId = user?.userId;  // Use userId from AuthContext
-
+  // Fetch profile data
   useEffect(() => {
-    if (userId) {
-      fetch(`http://localhost:8080/profile/${userId}`)
-        .then((response) => response.json())
-        .then((data) => {
-          if (data && data.username) {
-            setProfileData({
-              username: data.username,
-              banner: data.banner,
-              avatar: data.avatar,
-              location: data.location,
-              bio: data.bio,
-              website: data.website,
-              followerCount: data.follower_count,
-              followingCount: data.following_count,
-            });
-          }
-        });
-    }
+    if (!userId) return;
+
+    console.log("Fetching profile data for userId:", userId);
+
+    fetch(`http://localhost:8080/profile/${userId}`)
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Fetched profile data:", data);
+        if (data) {
+          setProfileData({
+            username: data.username,
+            banner: data.banner,
+            avatar: data.avatar,
+            location: data.location,
+            bio: data.bio,
+            website: data.website,
+            followerCount: data.follower_count,
+            followingCount: data.following_count,
+            is_blocked: data.is_blocked, // Add blocked status
+          });
+        }
+      });
   }, [userId]);
 
+  // Fetch posts only if the user is NOT blocked
   useEffect(() => {
-    if (userId) {
-      setLoading(true);
-      fetch(`http://localhost:8080/posts/user/${userId}`)
-        .then((response) => response.json())
-        .then((data) => {
-          setPosts(data.posts || []);
-          setHasMore((data.posts || []).length > 0);
-        })
-        .finally(() => setLoading(false));
-    }
-  }, [userId]);
+    if (!userId || !profileData) return; // Ensure profileData is loaded
 
+    console.log("Checking profileData.is_blocked:", profileData.is_blocked);
+
+    // If the user is blocked, clear posts immediately and don't fetch
+    if (profileData.is_blocked) {
+      console.log("User is blocked, clearing posts...");
+      setPosts([]); // Clear posts immediately
+      return;
+    }
+
+    console.log("Fetching posts for userId:", userId);
+    setLoading(true);
+    fetch(`http://localhost:8080/posts/user/${userId}`)
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Fetched posts for userId:", userId, "Posts:", data.posts);
+        setPosts(data.posts || []);
+      })
+      .finally(() => {
+        setLoading(false);
+        console.log("Finished fetching posts for userId:", userId);
+      });
+  }, [userId, profileData]); // Depend on profileData
+
+  // Follow/unfollow logic
   function handleFollowToggle() {
-    if (token) {
-      fetch(`http://localhost:8080/users/${userId}/${isFollowing ? "unfollow" : "follow"}`, {
-        method: isFollowing ? "DELETE" : "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      })
-        .then((response) => {
-          if (response.ok) {
-            setIsFollowing((prevState) => !prevState);
-            setProfileData((prevData) => {
-              if (!prevData) return null; // Ensure prevData exists
-              return {
-                ...prevData,
-                followerCount: isFollowing
-                  ? prevData.followerCount - 1
-                  : prevData.followerCount + 1, // Update count locally
-              };
-            });
-          } else {
-            response.json().then((data) => {
-              console.error(data.error || "An error occurred");
-            });
-          }
-        })
-        .catch((error) => {
-          console.error("Network error:", error);
-        });
-    }
-  }
-  
+    if (!token) return;
 
+    console.log("Toggling follow/unfollow for userId:", userId);
+
+    fetch(`http://localhost:8080/users/${userId}/${isFollowing ? "unfollow" : "follow"}`, {
+      method: isFollowing ? "DELETE" : "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    }).then((response) => {
+      if (response.ok) {
+        setIsFollowing(!isFollowing);
+        setProfileData((prevData) =>
+          prevData
+            ? { ...prevData, followerCount: isFollowing ? prevData.followerCount - 1 : prevData.followerCount + 1 }
+            : null
+        );
+      }
+    });
+  }
+
+  // Check follow status
   useEffect(() => {
-    if (userId && token) {
-      fetch(`http://localhost:8080/users/isFollowing/${userId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          if (data && typeof data.is_following === "boolean") {
-            setIsFollowing(data.is_following); // Corrected key name
-          }
-        })
-        .catch((error) => console.error("Error fetching follow status:", error));
-    }
+    if (!userId || !token) return;
+
+    console.log("Checking follow status for userId:", userId);
+
+    fetch(`http://localhost:8080/users/isFollowing/${userId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Follow status for userId:", userId, "Is Following:", data.is_following);
+        setIsFollowing(data.is_following);
+      });
   }, [userId, token]);
 
-  if (!profileData) {
-    return <p>Loading...</p>;
-  }
+  // Debug log to check profile data and posts state
+  console.log("Profile Data:", profileData);
+  console.log("Posts State:", posts);
 
+  if (!profileData) return <p>Loading...</p>;
 
   return (
     <div className="flex flex-col gap-2 items-center">
       <NavigationBar />
 
-      <div className="flex flex-col items-center justify-center gap-5 w-full md:max-w-2/3 p-5">
-        <ProfileHead
-          username={profileData.username}
-          banner={profileData.banner}
-          avatar={profileData.avatar}
-          location={profileData.location}
-          bio={profileData.bio}
-          website={profileData.website}
-          isFollowing={isFollowing}
-          followerCount={profileData.followerCount}
-          followingCount={profileData.followingCount}
-          onFollowToggle={handleFollowToggle}
-          isCurrentUser={String(userId) === String(connectedUserId)} // Compare userIds correctly
-        />
-
-        {posts.map((post: PostData, index) => (
-          <Post key={`${post.id}-${index}`} {...post} />
-        ))}
-        {loading && <p>Loading more posts...</p>}
-        {!hasMore && <p>No more posts to load.</p>}
-      </div>
+      {profileData.is_blocked ? (
+        <div className="p-5 text-xl text-red-500">
+          This user has been blocked for violation of terms of service.
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center gap-5 w-full md:max-w-2/3 p-5">
+          <ProfileHead
+            username={profileData.username}
+            banner={profileData.banner}
+            avatar={profileData.avatar}
+            location={profileData.location}
+            bio={profileData.bio}
+            website={profileData.website}
+            isFollowing={isFollowing}
+            followerCount={profileData.followerCount}
+            followingCount={profileData.followingCount}
+            onFollowToggle={handleFollowToggle}
+            isCurrentUser={String(userId) === String(connectedUserId)}
+          />
+          {/* Only show posts if the user is NOT blocked */}
+          {profileData.is_blocked ? (
+            <p>This user has been blocked and their posts are hidden.</p>
+          ) : (
+            <>
+              {posts.length > 0 ? (
+                posts.map((post) => (
+                  <Post key={post.id} {...post} />
+                ))
+              ) : loading ? (
+                <p>Loading posts...</p>
+              ) : (
+                <p>No posts available.</p>
+              )}
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }

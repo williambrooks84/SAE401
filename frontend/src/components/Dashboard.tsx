@@ -151,6 +151,37 @@ export default function Dashboard() {
           </Button>
 
           <Button
+            variant="black"
+            size="default"
+            rounded="default"
+            width="fit"
+            padding="default"
+            onClick={() => {
+              if (selectedUserId) {
+                fetch(`http://localhost:8080/users/block/${selectedUserId}`, {
+                  method: 'PATCH',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                  },
+                })
+                .then(response => response.json())
+                .then(() => {
+                  alert('User blocked successfully!');
+                  window.location.reload();
+                })
+                .catch(error => {
+                  alert(`Error: ${error.message}`);
+                });
+              } else {
+                alert("Please select a user first.");
+              }
+            }}
+          >
+            Block user
+          </Button>
+
+          <Button
             variant="greybgless"
             size="bgless"
             rounded="none"

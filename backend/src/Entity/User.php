@@ -62,7 +62,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(mappedBy: 'followed', targetEntity: 'App\Entity\Follow', cascade: ['persist'])]
     private Collection $following;
 
-
     public function __construct()
     {
         $this->value = new ArrayCollection();
@@ -288,4 +287,5 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         }
         return false;
     }
+
 }

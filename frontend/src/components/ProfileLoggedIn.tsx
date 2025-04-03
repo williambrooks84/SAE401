@@ -35,6 +35,18 @@ export default function ProfileLoggedIn() {
         </Button>
       )}
       <Button
+        variant="nobg"
+        size="default"
+        textSize="large"
+        rounded="default"
+        width="fit"
+        padding="default"
+        onClick={() => navigate("/foryou")} // Navigate to the followed page
+      >
+        For you
+      </Button>
+
+      <Button
         variant="default"
         size="default"
         rounded="default"

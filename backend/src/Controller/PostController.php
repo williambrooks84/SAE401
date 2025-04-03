@@ -28,13 +28,23 @@ class PostController extends AbstractController
 
         $posts = [];
         foreach ($paginator as $post) {
+            // Check if the user is blocked
+            $user = $post->getUser();
+            $roles = $user->getRoles();
+            $isBlocked = in_array('ROLE_USER_BLOCKED', $roles);  // Check if the user has the 'ROLE_USER_BLOCKED'
+
+            // If the user is blocked, change the post content
+            $content = $isBlocked ? 'This user has been blocked for violation of terms of service' : $post->getContent();
+
+            // Build the post data array
             $posts[] = [
                 'id' => $post->getId(),
-                'user_id' => $post->getUser()->getId(),
-                'content' => $post->getContent(),
+                'user_id' => $user->getId(),
+                'content' => $content,
                 'created_at' => $post->getCreatedAt()->format('Y-m-d H:i:s'),
-                'avatar' => $post->getUser()->getAvatar(),
-                'username' => $post->getUser()->getUsername(),
+                'avatar' => $user->getAvatar(),
+                'username' => $user->getUsername(),
+                'is_blocked' => $isBlocked,  // Optionally include 'is_blocked' flag to inform the frontend
             ];
         }
 
@@ -86,10 +96,13 @@ class PostController extends AbstractController
     {
         // Fetch posts for the userId
         $posts = $postRepository->findBy(['user' => $userId], ['created_at' => 'DESC']);
-    
+        $isBlocked = false;
+
         if (!$posts) {
             return $this->json(['error' => 'No posts found for this user'], JsonResponse::HTTP_NOT_FOUND);
         }
+
+        $isBlocked = in_array('ROLE_USER_BLOCKED', $posts[0]->getUser()->getRoles());
     
         $response = [];
         foreach ($posts as $post) {
@@ -100,6 +113,8 @@ class PostController extends AbstractController
                 'created_at' => $post->getCreatedAt()->format('Y-m-d H:i:s'),
                 'avatar' => $post->getUser()->getAvatar(),
                 'username' => $post->getUser()->getUsername(),
+                'is_blocked' => $isBlocked,
+
             ];
         }
     
