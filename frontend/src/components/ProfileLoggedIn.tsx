@@ -1,53 +1,58 @@
 import Button from "../ui/Button";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { ProfileButtonIcon } from "../assets/icons";
+import { useAuth } from "../context/AuthContext"; // Use AuthContext
 
 export default function ProfileLoggedIn() {
   const navigate = useNavigate();
-  const [username, setUsername] = useState<string | null>(null); // Store the username
-  const token = localStorage.getItem("access_token");
-  
-  useEffect(() => {
-    if (token) {
-      // Fetch user data by token
-      fetch("http://localhost:8080/token", {  // Updated endpoint name here
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,  // Pass the token for authentication
-        },
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          if (data && data.username) {
-            setUsername(data.username); // Set the username in state
-          } else {
-            console.error("User data not found.");
-          }
-        })
-        .catch((error) => {
-          console.error("Error fetching user data:", error);
-        });
-    }
-  }, [token]);
+  const { user, logout } = useAuth(); // Destructure user and logout from AuthContext
+
+  // Use user data directly from context
+  const username = user?.username;  // Directly access the username from context
+  const userId = user?.userId;  // Directly access the userId from context
 
   const handleLogout = () => {
-    // Remove the token from localStorage (effectively logging out the user)
-    localStorage.removeItem("access_token");
-
-    // Redirect the user to the login page
-    navigate("/login");
+    logout(); // Call logout from context to handle logout
+    navigate("/login");  // Navigate to the login page after logout
   };
 
   return (
     <div className="flex flex-col items-center gap-7">
-      <p className="text-center text-lg font-bold">Welcome, {username}!</p>
+      {/* Display username */}
+      <p className="text-center text-lg font-bold">Welcome, {username || 'User'}!</p>  {/* Show username or 'User' if not available */}
+      {userId && (
+        <Button
+          variant="nobg"
+          size="default"
+          rounded="default"
+          width="fit"
+          padding="default"
+          onClick={() => navigate(`/profile/${userId}`)} // Navigate to the user's profile
+          className="flex flex-row items-center gap-2"
+        >
+          <ProfileButtonIcon className="w-4 h-4" />
+          <p className="text-sm">Profile</p>
+        </Button>
+      )}
+      <Button
+        variant="nobg"
+        size="default"
+        textSize="large"
+        rounded="default"
+        width="fit"
+        padding="default"
+        onClick={() => navigate("/foryou")} // Navigate to the followed page
+      >
+        For you
+      </Button>
+
       <Button
         variant="default"
         size="default"
         rounded="default"
         width="fit"
         padding="default"
-        onClick={handleLogout} // Calls the logout function when clicked
+        onClick={handleLogout} // Logout when clicked
       >
         Logout
       </Button>

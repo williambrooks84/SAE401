@@ -5,8 +5,10 @@ import TextArea from "../ui/TextArea";
 import FormLabel from "../ui/FormLabel";
 import Button from "../ui/Button";
 import LetterCounter from "../ui/LetterCounter";
+import { useAuth } from "../context/AuthContext";
 
 export default function Publish() {
+    const { token } = useAuth(); 
     const [post, setPost] = useState('');
     const [postError, setPostError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
@@ -14,11 +16,8 @@ export default function Publish() {
     const navigate = useNavigate();
 
     useEffect(() => {
-        const token = localStorage.getItem("access_token");
-        if (!token) {
-            navigate("/login"); // Redirect to login page if no token
-        }
-    }, [navigate]);
+        if (!token) navigate("/login");
+      }, [token, navigate]);
 
     const handlePostChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const value = e.target.value;

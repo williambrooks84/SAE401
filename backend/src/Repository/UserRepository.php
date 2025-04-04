@@ -41,7 +41,7 @@ class UserRepository extends ServiceEntityRepository
     //        ;
     //    }
 
-        /**
+    /**
      * Find a user by email
      */
     public function findByEmail(string $email): ?User
@@ -63,5 +63,16 @@ class UserRepository extends ServiceEntityRepository
             ->setParameter('username', $username)
             ->getQuery()
             ->getOneOrNullResult();
+    }
+
+    public function findFollowedUserIds(User $user): array
+    {
+        return $this->createQueryBuilder('u')
+            ->select('IDENTITY(f.followed)') // Extract followed user IDs
+            ->join('App\Entity\Follow', 'f', 'WITH', 'f.follower = u')
+            ->where('u.id = :userId')
+            ->setParameter('userId', $user->getId())
+            ->getQuery()
+            ->getSingleColumnResult(); // Returns an array of IDs
     }
 }

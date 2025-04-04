@@ -42,6 +42,11 @@ final class ApiLoginController extends AbstractController
             return $this->json(['error' => 'Please verify your email address'], Response::HTTP_FORBIDDEN);
         }
 
+        // Check if the user is blocked
+        if (in_array('ROLE_USER_BLOCKED', $user->getRoles())) {
+            return $this->json(['error' => 'Your account has been blocked. Please contact support.'], Response::HTTP_FORBIDDEN);
+        }
+
         // Validate password
         if (!$passwordHasher->isPasswordValid($user, $password)) {
             return $this->json(['error' => 'Invalid password'], Response::HTTP_UNAUTHORIZED);

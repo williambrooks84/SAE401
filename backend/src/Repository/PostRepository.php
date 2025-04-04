@@ -28,4 +28,14 @@ class PostRepository extends ServiceEntityRepository
 
         return new Paginator($query);
     }
+
+    public function findByUsers(array $users): array
+    {
+        return $this->createQueryBuilder('p')
+            ->where('p.user IN (:users)')
+            ->setParameter('users', $users)
+            ->getQuery()
+            ->getResult();
+    }
+
 }

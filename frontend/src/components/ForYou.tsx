@@ -3,11 +3,11 @@ import Post from "./Post";
 import { PostData } from "../interfaces/dataDefinitions";
 import NavigationBar from "../ui/NavigationBar";
 import Button from "../ui/Button";
+import { useAuth } from "../context/AuthContext";
 
-export default function Home() {
+export default function ForYou() {
+  const { token } = useAuth(); // Retrieve the token from the AuthContext
   const [posts, setPosts] = useState<PostData[]>([]);
-  const [nextPage, setNextPage] = useState<number | null>(1); 
-  const [hasMore, setHasMore] = useState(true); 
   const [loading, setLoading] = useState(false);
 
   const [autoRefresh, setAutoRefresh] = useState(false);
@@ -24,17 +24,18 @@ export default function Home() {
     return () => clearInterval(intervalId);
   }, [autoRefresh, refreshInterval]);
 
-  // Fetch posts and handle blocked users
+  // Fetch posts from the /posts/following endpoint
   useEffect(() => {
     async function fetchPosts() {
-      if (loading || !hasMore || nextPage === null) return;
+      if (loading) return;
 
       setLoading(true);
 
-      const response = await fetch(`http://localhost:8080/posts?page=${nextPage}`, {
+      const response = await fetch("http://localhost:8080/posts/following", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
       });
 
@@ -47,50 +48,21 @@ export default function Home() {
 
       const filteredPosts = data.posts.filter((post: PostData) => post.is_blocked !== true);
 
-      setPosts((prevPosts) => {
-        const postIds = new Set(prevPosts.map((post) => post.id));
-        return [...prevPosts, ...filteredPosts.filter((post: PostData) => !postIds.has(post.id))];
-      });
-
-      if (data.next_page) {
-        setNextPage(data.next_page);
-      } else {
-        setHasMore(false);
-      }
-
+      setPosts(filteredPosts);
       setLoading(false);
     }
 
     fetchPosts();
-  }, [nextPage]); 
-
-
-  useEffect(() => {
-    function handleScroll() {
-      if (
-        window.innerHeight + document.documentElement.scrollTop >=
-        document.documentElement.offsetHeight - 100
-      ) {
-
-        if (hasMore && !loading && nextPage !== null) {
-
-        }
-      }
-    }
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [hasMore, loading, nextPage]);
+  }, [token]);
 
   const refreshPosts = async () => {
     setLoading(true);
-    setHasMore(true);
-    setNextPage(1);
 
-    const response = await fetch("http://localhost:8080/posts?page=1", {
+    const response = await fetch("http://localhost:8080/posts/following", {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
     });
 
@@ -104,15 +76,9 @@ export default function Home() {
     const filteredPosts = data.posts.filter((post: PostData) => post.is_blocked !== true);
     setPosts(filteredPosts);
 
-    if (data.next_page) {
-      setNextPage(data.next_page);
-    } else {
-      setHasMore(false);
-    }
-
     setLoading(false);
   };
-  
+
   useEffect(() => {
     const savedAutoRefresh = localStorage.getItem("autoRefresh");
     const savedInterval = localStorage.getItem("refreshInterval");
@@ -156,7 +122,6 @@ export default function Home() {
           ))
         )}
         {loading && <p>Loading more posts...</p>}
-        {!hasMore && <p>No more posts to load.</p>}
       </div>
     </div>
   );
