@@ -55,7 +55,7 @@ const compressImage = async (file: File, maxSizeMB: number, maxWidthOrHeight: nu
 };
 
 export default function EditProfile() {
-    const { token } = useAuth();
+    const { token, user } = useAuth();
     const [avatarFile, setAvatarFile] = useState<File | null>(null);
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
     const [newUsername, setNewUsername] = useState('');
@@ -142,7 +142,7 @@ export default function EditProfile() {
             const response = await fetch('http://localhost:8080/upload-avatar', {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${token}`, // Assurez-vous que `token` est défini
+                    'Authorization': `Bearer ${token}`,
                 },
                 body: formData,
             });
@@ -195,10 +195,10 @@ export default function EditProfile() {
                 .then((response) => response.json())
                 .then((data) => {
                     if (data) {
-                        setNewUsername(data.username || '');
-                        setNewLocation(data.location || '');
-                        setNewBio(data.bio || '');
-                        setNewWebsite(data.website || '');
+                        setNewUsername(data.username ?? '');
+                        setNewLocation(data.location ?? '');
+                        setNewBio(data.bio ?? '');
+                        setNewWebsite(data.website ?? '');
                         setAvatarPreview(data.avatar ? `http://localhost:8080${data.avatar}` : null);
                         setBannerPreview(data.banner ? `http://localhost:8080${data.banner}` : null);
                     }
@@ -226,27 +226,36 @@ export default function EditProfile() {
             setWebsiteError(null); // Clear the error if valid or empty
         }
     
-        const formData = new FormData();
-        formData.append("username", newUsername);
-        formData.append("location", newLocation);
-        formData.append("bio", newBio);
-        formData.append("website", newWebsite);
-    
-        // Compress avatar and banner before uploading
+        const updatedProfile: {
+            username: string;
+            location?: string;
+            bio?: string;
+            website?: string;
+            avatar?: File;
+            banner?: File;
+        } = {
+            username: newUsername,
+            location: newLocation,
+            bio: newBio,
+            website: newWebsite,
+        };
+        
+        // Compress avatar and banner before uploading (if exists)
         if (avatarFile) {
-            formData.append("avatar", avatarFile);
+            updatedProfile.avatar = avatarFile;
         }
         if (newBanner) {
-            formData.append("banner", newBanner);
+            updatedProfile.banner = newBanner;
         }
     
         try {
             const response = await fetch(`${API_URL}/profile/update`, {
                 method: "PATCH",
                 headers: {
-                    Authorization: `Bearer ${token}`,
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json",  // Important for sending JSON data
                 },
-                body: formData,
+                body: JSON.stringify(updatedProfile),  // Send as JSON
             });
     
             const contentType = response.headers.get("Content-Type");
@@ -255,6 +264,10 @@ export default function EditProfile() {
                 if (response.ok && data.status === 'success') {
                     setAvatarPreview(data.data.avatar);
                     setBannerPreview(data.data.banner);
+                    setNewUsername(data.data.username);
+                    setNewLocation(data.data.location);
+                    setNewBio(data.data.bio);
+                    setNewWebsite(data.data.website);
     
                     if (avatarFile) {
                         await handleAvatarUpload(avatarFile);
@@ -277,6 +290,9 @@ export default function EditProfile() {
             alert("Failed to update profile. Check your network or try again.");
         } finally {
             setLoading(false);
+            if (user?.userId) {
+                navigate(`/profile/${user.userId}`); // Redirect to profile page after update
+            }
         }
     };
     
@@ -308,28 +324,28 @@ export default function EditProfile() {
                         <FormLabel size="large" weight="medium" color="default" label="Change your username:" />
                         <FormBox
                             placeholder="Enter username"
-                            value={newUsername}
+                            value={newUsername ?? ''}
                             onChange={(e) => setNewUsername(e.target.value)}
                         />
 
                         <FormLabel size="large" weight="medium" color="default" label="Change your location:" />
                         <FormBox
                             placeholder="Enter location"
-                            value={newLocation}
+                            value={newLocation ?? ''}
                             onChange={(e) => setNewLocation(e.target.value)}
                         />
 
                         <FormLabel size="large" weight="medium" color="default" label="Change your bio:" />
                         <FormBox
                             placeholder="Enter bio"
-                            value={newBio}
+                            value={newBio ?? ''}
                             onChange={(e) => setNewBio(e.target.value)}
                         />
 
                         <FormLabel size="large" weight="medium" color="default" label="Change your website:" />
                         <FormBox
                             placeholder="Enter website"
-                            value={newWebsite}
+                            value={newWebsite ?? ''}
                             onChange={handleWebsiteChange}
                         />
                         {websiteError && (
