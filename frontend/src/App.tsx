@@ -4,6 +4,7 @@ import Signup from "./components/Signup";
 import Publish from "./components/Publish";
 import Dashboard from "./components/Dashboard";
 import Profile from "./components/Profile";
+import EditProfile from "./components/EditProfile";
 import ForYou from "./components/ForYou";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
@@ -19,6 +20,7 @@ export default function App() {
           <Route path="/publish" element={<Publish />}/>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/profile/:userId" element={<Profile/>} />
+          <Route path="/editprofile" element={<EditProfile/>} />
           <Route path="/foryou" element={<ForYou />} />
         </Routes>
       </Router>

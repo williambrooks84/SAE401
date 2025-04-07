@@ -3,6 +3,7 @@ import { ProfileHeadProps } from "../interfaces/dataDefinitions";
 import Button from "../ui/Button";
 import Avatar from "../ui/Avatar";
 import FollowerCounter from "../ui/FollowerCounter";
+import { useNavigate } from "react-router-dom";
 
 export default function ProfileHead({
     username,
@@ -17,11 +18,16 @@ export default function ProfileHead({
     onFollowToggle,
     isCurrentUser,
 }: ProfileHeadProps) {
+    const navigate = useNavigate();
+
     return (
         <div className="flex flex-col justify-center p-5 gap-5 w-full md:w-1/2 rounded-4xl bg-post-background mx-auto">
             <div
-                className="relative h-24 md:h-40 bg-cover bg-center rounded-lg"
-                style={{ backgroundImage: `url(${banner})` }}
+                className="relative h-48 md:h-80 bg-cover bg-center rounded-lg"
+                style={{
+                    backgroundImage: `url(${banner})`,
+                    backgroundPosition: "center",
+                }}
             >
                 <div className="absolute inset-0 flex items-center justify-center">
                     <Avatar avatar={avatar} username={username} color="white" />
@@ -42,6 +48,20 @@ export default function ProfileHead({
                 </div>
                 <FollowerCounter followerCount={followerCount} followingCount={followingCount} />
             </div>
+            {isCurrentUser && (
+                <div className="flex justify-center">
+                    <Button
+                        variant="nobg"
+                        size="default"
+                        rounded="default"
+                        width="fit"
+                        className="min-w-28"
+                        onClick={() => navigate("/editprofile")}
+                    >
+                        Edit your profile
+                    </Button>
+                </div>
+            )}
 
             {!isCurrentUser && (
                 <div className="flex justify-center">

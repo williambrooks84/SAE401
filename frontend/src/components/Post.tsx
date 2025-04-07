@@ -59,7 +59,7 @@ export default function Post({ id, avatar, username, content, created_at, user_i
   return (
     <div className="flex flex-col p-5 gap-4 w-full md:w-1/2 rounded-4xl bg-post-background">
       <div className="cursor-pointer" onClick={NavigateToProfile}>
-        <Avatar avatar={avatar} username={username} color="black" />
+        <Avatar avatar={`http://localhost:8080${avatar}`} username={username} color="black" />
       </div>
       <div>
         <p className="text-xl text-post-text">{content}</p>

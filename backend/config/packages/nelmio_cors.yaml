@@ -1,7 +1,7 @@
 nelmio_cors:
     defaults:
         allow_origin: ['http://localhost:8090'] # Change this to match your frontend URL
-        allow_methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'DELETE']
+        allow_methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'DELETE', 'PATCH']
         allow_headers: ['Content-Type', 'Authorization']
         max_age: 3600
     paths:
@@ -16,5 +16,12 @@ nelmio_cors:
         '^/user':  # Only applies to the /block route
             allow_origin: ['http://localhost:8090']
             allow_methods: ['GET', 'OPTIONS', 'POST', 'PATCH', 'PUT', 'DELETE']
-            allow_headers: ['Content-Type', 'Authorization']    
-             
+            allow_headers: ['Content-Type', 'Authorization']  
+        '^/profile':  # Applies to all /profile routes
+            allow_origin: ['http://localhost:8090']
+            allow_methods: ['GET', 'OPTIONS', 'POST', 'PATCH', 'PUT', 'DELETE']
+            allow_headers: ['Content-Type', 'Authorization']   
+        '^/profile/update': # Only allow CORS for this route
+            allow_origin: ['http://localhost:8090']
+            allow_methods: ['PATCH', 'OPTIONS', 'POST']
+            allow_headers: ['Content-Type', 'Authorization']

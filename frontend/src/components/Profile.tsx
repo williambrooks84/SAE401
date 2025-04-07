@@ -25,8 +25,8 @@ export default function Profile() {
         if (data) {
           setProfileData({
             username: data.username,
-            banner: data.banner,
-            avatar: data.avatar,
+            banner: `http://localhost:8080${data.banner}`,
+            avatar: `http://localhost:8080${data.avatar}`,
             location: data.location,
             bio: data.bio,
             website: data.website,

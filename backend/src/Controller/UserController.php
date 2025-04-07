@@ -14,6 +14,8 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use App\Repository\TokenRepository;
+use Intervention\Image\ImageManagerStatic as Image;
+use App\Service\FileUploader; // Ensure this service exists in the specified namespace
 
 class UserController extends AbstractController
 {
@@ -70,6 +72,11 @@ class UserController extends AbstractController
             'username' => $user->getUsername(),
             'email' => $user->getEmail(),
             'is_verified' => $user->getIsVerified(),
+            'banner' => $user->getBanner(),
+            'avatar' => $user->getAvatar(),
+            'location' => $user->getLocation(),
+            'bio' => $user->getBio(),
+            'website' => $user->getWebsite(),
         ]);
     }
     
@@ -352,5 +359,4 @@ class UserController extends AbstractController
 
         return new JsonResponse(['message' => 'User blocked successfully.'], 200);
     }
-
 }

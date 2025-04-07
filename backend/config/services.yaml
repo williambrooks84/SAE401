@@ -17,12 +17,16 @@ services:
         resource: '../src/'
         exclude:
             - '../src/DependencyInjection/'
-            - '../src/Entity/'
             - '../src/Kernel.php'
 
     App\Security\LoginSuccessHandler:
         arguments:
             $security: '@security.helper'
+
+    App\Service\FileUploader:
+        arguments:
+            $targetDirectory: '%kernel.project_dir%'
+            $slugger: '@slugger' 
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
