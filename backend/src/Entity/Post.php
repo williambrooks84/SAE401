@@ -27,6 +27,9 @@ class Post
     #[ORM\OneToMany(mappedBy: 'post', targetEntity: Like::class, cascade: ['persist', 'remove'])]
     private $likes;
 
+    #[ORM\Column(type: Types::JSON, nullable: true)]
+    private ?array $filePaths = [];
+
     public function __construct()
     {
         $this->likes = new \Doctrine\Common\Collections\ArrayCollection();
@@ -104,6 +107,17 @@ class Post
             }
         }
 
+        return $this;
+    }
+
+    public function getFilePaths(): ?array
+    {
+        return $this->filePaths;
+    }
+
+    public function setFilePaths(?array $filePaths): static
+    {
+        $this->filePaths = $filePaths;
         return $this;
     }
 }

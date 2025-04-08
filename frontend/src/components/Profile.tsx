@@ -41,12 +41,12 @@ export default function Profile() {
   // Fetch posts only if the user is NOT blocked
   useEffect(() => {
     if (!userId || !profileData) return;
-
+  
     if (profileData.is_blocked) {
-      setPosts([]);
+      setPosts([]); // If blocked, no posts are shown
       return;
     }
-
+  
     setLoading(true);
     fetch(`http://localhost:8080/posts/user/${userId}`)
       .then((response) => response.json())
@@ -120,15 +120,23 @@ export default function Profile() {
             <p>This user has been blocked and their posts are hidden.</p>
           ) : (
             <>
-              {posts.length > 0 ? (
-                posts.map((post) => (
-                  <Post key={post.id} {...post} />
-                ))
-              ) : loading ? (
-                <p>Loading posts...</p>
+              {posts.length === 0 ? (
+              <p>No posts to show</p>
               ) : (
-                <p>No posts available.</p>
+              posts.map((post: PostData, index) => (
+                <Post
+                key={`${post.id}-${index}`}
+                id={post.id}
+                user_id={post.user_id}
+                avatar={post.avatar}
+                username={post.username}
+                content={post.content}
+                created_at={post.created_at}
+                file_paths={post.file_paths}
+                />
+              ))
               )}
+              {loading && <p>Loading more posts...</p>}
             </>
           )}
         </div>

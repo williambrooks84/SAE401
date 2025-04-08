@@ -7,7 +7,7 @@ import Avatar from "../ui/Avatar";
 import DateTime from "../ui/DateTime";
 import { PostProps } from "../interfaces/dataDefinitions";
 
-export default function Post({ id, avatar, username, content, created_at, user_id }: PostProps) {
+export default function Post({ id, avatar, username, content, created_at, user_id, file_paths }: PostProps) {
   const { token, user } = useAuth();
   const [liked, setLiked] = useState<boolean>(false);
   const [likeCount, setLikeCount] = useState<number>(0);
@@ -15,14 +15,27 @@ export default function Post({ id, avatar, username, content, created_at, user_i
 
   // Fetch like status
   useEffect(() => {
-    fetch(`http://localhost:8080/posts/${id}/like-status`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        setLikeCount(data.like_count || 0);
-        if (token) setLiked(data.liked);
-      });
+    // Check if there's a valid token before making the request
+    if (token) {
+      fetch(`http://localhost:8080/posts/${id}/like-status`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((response) => {
+          // If not authorized, no need to process the response
+          if (response.status === 401) {
+            return;
+          }
+
+          return response.json();
+        })
+        .then((data) => {
+          // Only update state if data is valid
+          if (data) {
+            setLikeCount(data.like_count || 0);
+            setLiked(data.liked);
+          }
+        });
+    }
   }, [id, token]);
 
   const handleLike = (newLiked: boolean) => {
@@ -63,6 +76,34 @@ export default function Post({ id, avatar, username, content, created_at, user_i
       </div>
       <div>
         <p className="text-xl text-post-text">{content}</p>
+        <div>
+          {file_paths && file_paths.length > 0 && (
+            <div className="flex flex-row gap-2 mt-2">
+              {file_paths.map((file_path, index) => {
+                const isVideo = file_path.endsWith(".mp4");
+                const mediaSrc = `http://localhost:8080${file_path}`;
+
+                return (
+                  <div key={index} className="w-full">
+                    {isVideo ? (
+                      <video controls className="w-full h-auto rounded-lg">
+                        <source src={mediaSrc} type="video/mp4" />
+                        Your browser does not support the video tag.
+                      </video>
+                    ) : (
+                      <img
+                        src={mediaSrc}
+                        alt={`Post media ${index}`}
+                        className="w-full h-auto rounded-lg"
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
         <hr className="my-4 border-post-grey" />
         <div className="flex flex-row justify-between items-center">
           <DateTime date={created_at} />

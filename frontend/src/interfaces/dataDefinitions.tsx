@@ -35,6 +35,7 @@ export interface PostProps {
     content: string;
     created_at: string;
     is_blocked?: boolean;
+    file_paths?: string[];
 }
 
 //PostData
@@ -46,6 +47,7 @@ export interface PostData {
     content: string;
     created_at: string;
     is_blocked?: boolean;
+    file_paths?: string[];
 }
 
 //TextArea

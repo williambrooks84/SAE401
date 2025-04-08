@@ -6,18 +6,21 @@ import FormLabel from "../ui/FormLabel";
 import Button from "../ui/Button";
 import LetterCounter from "../ui/LetterCounter";
 import { useAuth } from "../context/AuthContext";
+import { compressImage } from "../utils/compressImage";
 
 export default function Publish() {
-    const { token } = useAuth(); 
+    const { token } = useAuth();
     const [post, setPost] = useState('');
     const [postError, setPostError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
     const [loading, setLoading] = useState(false);
+    const [files, setFiles] = useState<File[]>([]);
+    const [filePreviews, setFilePreviews] = useState<string[]>([]); // Store previews
     const navigate = useNavigate();
 
     useEffect(() => {
         if (!token) navigate("/login");
-      }, [token, navigate]);
+    }, [token, navigate]);
 
     const handlePostChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const value = e.target.value;
@@ -27,6 +30,37 @@ export default function Publish() {
             setPostError('');
         }
         setPost(value);
+    };
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const selectedFiles = e.target.files;
+        if (selectedFiles) {
+            const compressedFiles: File[] = [];
+            const previews: string[] = [];
+    
+            // Loop over the selected files
+            for (const file of Array.from(selectedFiles)) {
+                try {
+                    const compressedFile = await compressImage(file, 1, 500); // Compress to 1MB and resize to 500px max dimension
+                    compressedFiles.push(compressedFile);
+    
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        previews.push(reader.result as string); // Push preview to the array
+                        // Once all previews are gathered, set them in state
+                        if (previews.length === selectedFiles.length) {
+                            setFilePreviews(previews); // Update previews state after all previews are loaded
+                        }
+                    };
+                    reader.readAsDataURL(compressedFile); // Use Data URL for preview
+                } catch (error) {
+                    console.error("Error compressing file:", error);
+                }
+            }
+    
+            // Append new files to the current files state instead of overwriting
+            setFiles(prev => [...prev, ...compressedFiles]);
+        }
     };
 
     const handleSubmit = async () => {
@@ -39,29 +73,45 @@ export default function Publish() {
         setSuccessMessage('');
         setPostError('');
 
-        const token = localStorage.getItem("access_token");
+        const formData = new FormData();
+        formData.append("content", post);
 
-        const response = await fetch("http://localhost:8080/posts", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ content: post }),
+        files.forEach((file) => {
+        formData.append("files[]", file); // Make sure to append as "files[]"
         });
 
-        const data = await response.json();
 
-        if (!response.ok) {
-            setPostError(data.error || "An error occurred while publishing.");
-        } else {
-            setSuccessMessage("Post published successfully!");
-            setPost('');
-            
-            // Show success message briefly, then redirect
-            setTimeout(() => {
-                navigate('/');
-            }, 2000); // Redirect after 2 seconds
+          console.log("FormData:", files); // Debugging line to check FormData content
+
+        const token = localStorage.getItem("access_token");
+
+        try {
+            const response = await fetch("http://localhost:8080/posts", {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${token}`, // Use the token for authorization
+                },
+                body: formData, // Use FormData to send files and content
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                setPostError(data.error || "An error occurred while publishing.");
+            } else {
+                setSuccessMessage("Post published successfully!");
+                setPost(''); // Reset content field
+                setFiles([]); // Clear files after posting
+                setFilePreviews([]); // Clear file previews
+
+                // Show success message briefly, then redirect
+                setTimeout(() => {
+                    navigate('/'); // Redirect after 2 seconds
+                }, 2000);
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            setPostError("Error creating post.");
         }
 
         setLoading(false);
@@ -71,24 +121,56 @@ export default function Publish() {
         <>
             <NavigationBar />
             <div className="bg-post-background rounded-4xl m-5 p-0.5 gap-3 md:w-1/2 md:mx-auto">
-            <div className="p-7">
-                <h1 className="text-4xl font-semibold mb-2.5">Add a post</h1>
-                <div className="flex flex-col justify-center gap-2">
-                <FormLabel size="extralarge2" weight="medium" color="default" label="Enter your text here:" />
-                <TextArea
-                    placeholder="Your text here..."
-                    value={post}
-                    onChange={(e) => handlePostChange(e as React.ChangeEvent<HTMLTextAreaElement>)}
-                    rows={5}
-                />
-                <LetterCounter value={post} limit="280"/>
-                {postError && <span className="text-error">{postError}</span>}
-                {successMessage && <span className="text-success">{successMessage}</span>}
+                <div className="p-7">
+                    <h1 className="text-4xl font-semibold mb-2.5">Add a post</h1>
+                    <div className="flex flex-col justify-center gap-2">
+                        <FormLabel size="extralarge2" weight="medium" color="default" label="Enter your text here:" />
+                        <TextArea
+                            placeholder="Your text here..."
+                            value={post}
+                            onChange={(e) => handlePostChange(e as React.ChangeEvent<HTMLTextAreaElement>)}
+                            rows={5}
+                        />
+                        <LetterCounter value={post} limit="280" />
+                        {postError && <span className="text-error">{postError}</span>}
+                        {successMessage && <span className="text-success">{successMessage}</span>}
+                    </div>
+    
+                    <div>
+                        <input
+                            type="file"
+                            accept="image/*,video/*" // Accept images and videos
+                            onChange={handleFileChange}
+                            multiple // Allow multiple files
+                        />
+                    </div>
+    
+                    {filePreviews.length > 0 && (
+                        <div className="mt-4">
+                            <h3 className="text-lg font-medium">File Previews:</h3>
+                            <div className="flex flex-wrap gap-4 mt-2">
+                                {filePreviews.map((preview, index) => {
+                                    const file = files[index]; // Access the file object for the current index
+                                    return (
+                                        <div key={index} className="w-32 h-32 overflow-hidden rounded-lg">
+                                            {/* Check if the file is defined and its type is supported */}
+                                            {file && file.type.startsWith('image') ? (
+                                                <img src={preview} alt="file preview" className="w-full h-full object-cover" />
+                                            ) : file && file.type.startsWith('video') ? (
+                                                <video src={preview} className="w-full h-full object-cover" controls />
+                                            ) : (
+                                                <div>Unsupported file type</div> // Handle unsupported file types
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+                    <div className="flex justify-center mt-6">
+                        <Button width="fit" padding="default" onClick={handleSubmit} disabled={loading || post.length > 280 || post.trim() === ""}>Publish</Button>
+                    </div>
                 </div>
-                <div className="flex justify-center mt-6">
-                <Button width="fit" padding="default" onClick={handleSubmit} disabled={loading || post.length > 280 || post.trim() === ""}>Publish</Button>
-                </div>
-            </div>
             </div>
         </>
     );
