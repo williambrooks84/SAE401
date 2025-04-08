@@ -41,12 +41,12 @@ export default function Profile() {
   // Fetch posts only if the user is NOT blocked
   useEffect(() => {
     if (!userId || !profileData) return;
-  
+
     if (profileData.is_blocked) {
-      setPosts([]); // If blocked, no posts are shown
+      setPosts([]);
       return;
     }
-  
+
     setLoading(true);
     fetch(`http://localhost:8080/posts/user/${userId}`)
       .then((response) => response.json())

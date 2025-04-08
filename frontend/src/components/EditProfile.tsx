@@ -253,24 +253,29 @@ export default function EditProfile() {
     return (
         <>
             <NavigationBar />
-            <div className="bg-post-background rounded-4xl m-5 p-0.5 gap-3 md:w-1/3 md:mx-auto">
-                <div className="flex flex-col p-7">
-                    <h1 className="text-4xl font-semibold mb-2.5">Edit your profile</h1>
-                    <div className="flex flex-col justify-center gap-2">
-                        <div className="flex flex-col justify-center gap-2">
+            <div className="bg-post-background rounded-4xl m-5 p-0.5 gap-4 md:w-1/3 md:mx-auto">
+                <div className="flex flex-col items-center p-7 gap-3">
+                    <h1 className="text-4xl text-left font-semibold mb-2.5">Edit your profile</h1>
+                    <div className="flex flex-col justify-center gap-2 w-full">
+                        <div className="flex flex-col justify-center gap-4">
                             <FormLabel size="large" weight="medium" color="default" label="Change your avatar:" />
-                            <input
-                                type="file"
-                                accept="image/*"
-                                onChange={handleAvatarChange}
-                                className="file-input"
-                            />
-                            {avatarPreview && (
-                                <img
-                                    src={avatarPreview}
-                                    alt="Avatar Preview"
-                                    className="mt-2 rounded-full w-24 h-24 object-cover"
+                            <label className="file-input-label">
+                                <span className="file-input-text border p-2 rounded-2xl">Choose an avatar</span>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleAvatarChange}
+                                    className="file-input hidden"
                                 />
+                            </label>    
+                            {avatarPreview && (
+                                <div className="flex justify-center">
+                                    <img
+                                        src={avatarPreview}
+                                        alt="Avatar Preview"
+                                        className="mt-2 rounded-full w-24 h-24 object-cover"
+                                    />
+                                </div>  
                             )}
                         </div>
 
@@ -306,19 +311,23 @@ export default function EditProfile() {
                         )}
                     </div>
 
-                    <div className="flex flex-col justify-center gap-2">
+                    <div className="flex flex-col justify-center gap-4 w-full">
                         <FormLabel size="large" weight="medium" color="default" label="Change your banner:" />
-                        <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleBannerChange}
-                            className="file-input"
-                        />
+                        <label className="file-input-label">
+                            <span className="file-input-text border p-2 rounded-2xl">Choose a banner</span>
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={handleBannerChange}
+                                className="file-input hidden"
+                            />
+                        </label>
+                            
                         {bannerPreview && (
                             <img
                                 src={bannerPreview}
                                 alt="Banner Preview"
-                                className="mt-2 rounded-lg max-h-40 md:max-h-80 object-cover"
+                                className="mt-2 rounded-lg h-full object-cover"
                             />
                         )}
                     </div>

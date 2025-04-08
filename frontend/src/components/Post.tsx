@@ -78,13 +78,13 @@ export default function Post({ id, avatar, username, content, created_at, user_i
         <p className="text-xl text-post-text">{content}</p>
         <div>
           {file_paths && file_paths.length > 0 && (
-            <div className="flex flex-row gap-2 mt-2">
+            <div className="flex flex-col items-center gap-5 mt-2">
               {file_paths.map((file_path, index) => {
                 const isVideo = file_path.endsWith(".mp4");
                 const mediaSrc = `http://localhost:8080${file_path}`;
 
                 return (
-                  <div key={index} className="w-full">
+                  <div key={index} className="w-full md:w-2/3">
                     {isVideo ? (
                       <video controls className="w-full h-auto rounded-lg">
                         <source src={mediaSrc} type="video/mp4" />
@@ -103,19 +103,19 @@ export default function Post({ id, avatar, username, content, created_at, user_i
             </div>
           )}
         </div>
+      </div>
 
-        <hr className="my-4 border-post-grey" />
-        <div className="flex flex-row justify-between items-center">
-          <DateTime date={created_at} />
-          <LikeCounter likesCount={likeCount} />
-          <div className="flex flex-row justify-center items-center gap-2">
-            {String(userId) === String(user_id) && (
-              <div className="cursor-pointer" onClick={handleDeletePost}>
-                <DeleteIcon className="cursor-pointer" />
-              </div>
-            )}
-            <Like liked={liked} setLiked={handleLike} />
-          </div>
+      <hr className="my-4 border-post-grey" />
+      <div className="flex flex-row justify-between items-center">
+        <DateTime date={created_at} />
+        <LikeCounter likesCount={likeCount} />
+        <div className="flex flex-row justify-center items-center gap-2">
+          {String(userId) === String(user_id) && (
+            <div className="cursor-pointer" onClick={handleDeletePost}>
+              <DeleteIcon className="cursor-pointer" />
+            </div>
+          )}
+          <Like liked={liked} setLiked={handleLike} />
         </div>
       </div>
     </div>

@@ -75,12 +75,12 @@ class PostController extends AbstractController
         }
 
         $content = $request->request->get('content');
-        if (empty(trim($content))) {
-            return new JsonResponse(['error' => 'Content is required'], 400);
-        }
-
         $files = $request->files->all()['files'] ?? [];
         $filePaths = [];
+
+        if (empty(trim($content)) && empty($files)) {
+            return new JsonResponse(['error' => 'Content or at least one file is required'], 400);
+        }
 
         if ($files) {
             $files = is_array($files) ? $files : [$files]; // Ensure $files is always an array
@@ -263,6 +263,11 @@ class PostController extends AbstractController
 
         $posts = $postRepository->findByUsers($followedUserIds);
 
+        // Sort posts by newest first
+        usort($posts, function ($a, $b) {
+            return $b->getCreatedAt() <=> $a->getCreatedAt();
+        });
+
         $response = array_map(function ($post) {
             $user = $post->getUser();
             return [
@@ -272,6 +277,7 @@ class PostController extends AbstractController
                 'created_at' => $post->getCreatedAt()->format('Y-m-d H:i:s'),
                 'avatar' => $user->getAvatar(),
                 'username' => $user->getUsername(),
+                'file_paths' => $post->getFilePaths(),
                 'is_blocked' => in_array('ROLE_USER_BLOCKED', $user->getRoles()),
             ];
         }, $posts);

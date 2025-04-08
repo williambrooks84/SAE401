@@ -118,6 +118,7 @@ export default function ForYou() {
               username={post.username}
               content={post.content}
               created_at={post.created_at}
+              file_paths={post.file_paths}
             />
           ))
         )}
