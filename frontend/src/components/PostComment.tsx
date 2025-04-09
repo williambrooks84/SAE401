@@ -74,6 +74,7 @@ export default function PostComment({ postId, updateCommentCount }: PostCommentP
     return (
         <>
             <div className="flex flex-col p-5 gap-4 w-full md:w-1/2 rounded-4xl bg-post-background">
+            <FormLabel size="extralarge2" weight="medium" color="default" label="Comments:" />
                 {comments.map((comment) => (
                     <div key={comment.id} className="flex flex-col mb-4">
                         <div className="cursor-pointer">
