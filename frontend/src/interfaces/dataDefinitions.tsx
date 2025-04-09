@@ -52,6 +52,7 @@ export interface PostData {
 
 //TextArea
 export interface TextAreaProps {
+    name?: string;
     placeholder: string;
     value: string;
     onChange: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;

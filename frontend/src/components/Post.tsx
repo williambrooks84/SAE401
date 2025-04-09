@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import Like from "../ui/Like";
 import LikeCounter from "../ui/LikeCounter";
-import { DeleteIcon } from "../assets/icons";
+import { DeleteIcon, EditIcon } from "../assets/icons";
 import Avatar from "../ui/Avatar";
 import DateTime from "../ui/DateTime";
 import { PostProps } from "../interfaces/dataDefinitions";
@@ -65,6 +65,10 @@ export default function Post({ id, avatar, username, content, created_at, user_i
     }
   };
 
+  const handleEditPost = () => {
+    window.location.href = `/edit/${id}`;
+  }
+
   function NavigateToProfile() {
     window.location.href = `/profile/${user_id}`;
   }
@@ -111,9 +115,14 @@ export default function Post({ id, avatar, username, content, created_at, user_i
         <LikeCounter likesCount={likeCount} />
         <div className="flex flex-row justify-center items-center gap-2">
           {String(userId) === String(user_id) && (
+            <div className="flex flex-row gap-2">
             <div className="cursor-pointer" onClick={handleDeletePost}>
               <DeleteIcon className="cursor-pointer" />
             </div>
+            <div className="cursor-pointer" onClick={handleEditPost}>
+              <EditIcon />
+            </div>
+          </div>
           )}
           <Like liked={liked} setLiked={handleLike} />
         </div>

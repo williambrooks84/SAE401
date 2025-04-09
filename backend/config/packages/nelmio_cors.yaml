@@ -5,7 +5,7 @@ nelmio_cors:
         allow_headers: ['Content-Type', 'Authorization']
         max_age: 3600
     paths:
-        '^/posts': # Applies to /posts API
+        ^/posts/.*':: # Applies to /posts API
             allow_origin: ['http://localhost:8090']
             allow_methods: ['GET', 'POST', 'OPTIONS', 'PUT', 'PATCH', 'DELETE']
             allow_headers: ['Content-Type', 'Authorization']

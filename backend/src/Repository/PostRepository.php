@@ -38,4 +38,13 @@ class PostRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    public function findById(int $id): ?Post
+    {
+        return $this->createQueryBuilder('p')
+            ->where('p.id = :id')
+            ->setParameter('id', $id)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
 }
