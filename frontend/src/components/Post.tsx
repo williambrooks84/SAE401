@@ -2,40 +2,46 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import Like from "../ui/Like";
 import LikeCounter from "../ui/LikeCounter";
-import { DeleteIcon, EditIcon } from "../assets/icons";
+import CommentCounter from "../ui/CommentCounter";
+import { DeleteIcon, EditIcon, CommentIcon } from "../assets/icons";
 import Avatar from "../ui/Avatar";
 import DateTime from "../ui/DateTime";
 import { PostProps } from "../interfaces/dataDefinitions";
+import PostComment from "./PostComment";
 
 export default function Post({ id, avatar, username, content, created_at, user_id, file_paths }: PostProps) {
   const { token, user } = useAuth();
   const [liked, setLiked] = useState<boolean>(false);
   const [likeCount, setLikeCount] = useState<number>(0);
   const userId = user?.userId;
+  const [commentCount, setCommentCount] = useState<number>(0);
+  const [showComments, setShowComments] = useState<boolean>(false);
 
-  // Fetch like status
+  // Fetch like status (visible even when not logged in)
   useEffect(() => {
-    // Check if there's a valid token before making the request
-    if (token) {
-      fetch(`http://localhost:8080/posts/${id}/like-status`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then((response) => {
-          // If not authorized, no need to process the response
-          if (response.status === 401) {
-            return;
-          }
-
-          return response.json();
-        })
-        .then((data) => {
-          // Only update state if data is valid
-          if (data) {
-            setLikeCount(data.like_count || 0);
-            setLiked(data.liked);
-          }
+    const fetchLikeCount = async () => {
+      try {
+        const response = await fetch(`http://localhost:8080/posts/${id}/like-status`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
-    }
+        if (!response.ok) {
+          console.error("Failed to fetch like status");
+          return;
+        }
+        const data = await response.json();
+        if (data) {
+          setLikeCount(data.like_count || 0); // Set like count
+          if (token) {
+            setLiked(data.liked); // Only update liked if user is authenticated
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching like status:", err);
+      }
+    };
+
+    fetchLikeCount();
+    updateCommentCount(); // Fetch comment count always
   }, [id, token]);
 
   const handleLike = (newLiked: boolean) => {
@@ -58,20 +64,30 @@ export default function Post({ id, avatar, username, content, created_at, user_i
       fetch(`http://localhost:8080/posts/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
-      })
-        .then((response) => {
-          if (response.ok) window.location.reload();
-        });
+      }).then((response) => {
+        if (response.ok) window.location.reload();
+      });
     }
   };
 
   const handleEditPost = () => {
     window.location.href = `/edit/${id}`;
-  }
+  };
 
   function NavigateToProfile() {
     window.location.href = `/profile/${user_id}`;
   }
+
+  const updateCommentCount = () => {
+    fetch(`http://localhost:8080/comments?post_id=${id}`)
+      .then((response) => response.json())
+      .then((data) => {
+        if (data && data.comments) {
+          setCommentCount(Number(data.comments.length));
+        }
+      });
+  };
+
 
   return (
     <div className="flex flex-col p-5 gap-4 w-full md:w-1/2 rounded-4xl bg-post-background">
@@ -111,21 +127,39 @@ export default function Post({ id, avatar, username, content, created_at, user_i
 
       <hr className="my-4 border-post-grey" />
       <div className="flex flex-row justify-between items-center">
-        <DateTime date={created_at} />
-        <LikeCounter likesCount={likeCount} />
+        <div className="flex flex-col gap-2">
+          <DateTime date={created_at} />
+          <div className="flex flex-col">
+            <LikeCounter likesCount={likeCount} />
+            <CommentCounter commentsCount={commentCount} />
+          </div>
+        </div>
         <div className="flex flex-row justify-center items-center gap-2">
           {String(userId) === String(user_id) && (
             <div className="flex flex-row gap-2">
-            <div className="cursor-pointer" onClick={handleDeletePost}>
-              <DeleteIcon className="cursor-pointer" />
+              <div className="cursor-pointer" onClick={handleDeletePost}>
+                <DeleteIcon className="cursor-pointer" />
+              </div>
+              <div className="cursor-pointer" onClick={handleEditPost}>
+                <EditIcon />
+              </div>
             </div>
-            <div className="cursor-pointer" onClick={handleEditPost}>
-              <EditIcon />
-            </div>
-          </div>
           )}
+          <div
+            className="cursor-pointer"
+            onClick={() => setShowComments((prev) => !prev)}
+          >
+            <CommentIcon />
+          </div>
           <Like liked={liked} setLiked={handleLike} />
         </div>
+      </div>
+      <div>
+        {showComments && (
+          <div>
+            <PostComment postId={id} updateCommentCount={updateCommentCount} />
+          </div>
+        )}
       </div>
     </div>
   );

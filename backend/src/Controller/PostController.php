@@ -13,7 +13,6 @@ use App\Entity\Post;
 use App\Entity\Like;
 use App\Repository\UserRepository;
 use App\Entity\User;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 class PostController extends AbstractController
 {
@@ -232,12 +231,20 @@ class PostController extends AbstractController
             return new JsonResponse(['error' => 'Post not found'], 404);
         }
 
+        // Get the like count, no authentication required for this
         $likeCount = count($post->getLikes());
 
+        // Check if the user is authenticated to determine if they liked the post
         $user = $this->getUser();
         if (!$user instanceof User) {
-            return $this->json(['error' => 'User not authenticated'], JsonResponse::HTTP_UNAUTHORIZED);
+            // If user is not authenticated, return the like count only
+            return new JsonResponse([
+                'like_count' => $likeCount,
+                'liked' => false, // As the user is not logged in, they have not liked the post
+            ]);
         }
+
+        // If the user is authenticated, check if they liked the post
         $userLiked = $post->getLikes()->filter(function ($like) use ($user) {
             return $like->getUser() === $user;
         })->isEmpty() ? false : true;
@@ -312,79 +319,72 @@ class PostController extends AbstractController
         ]);
     }
 
-    #[Route('/posts/{id}', name: 'posts.edit', methods: ['POST'])]
+    #[Route('/posts/{id}', name: 'posts.edit', methods: ['PATCH'])]
     public function EditPost(
         int $id,
         Request $request,
         PostRepository $postRepository,
         EntityManagerInterface $entityManager
     ): JsonResponse {
-        try {
-            $post = $postRepository->find($id);
+        $post = $postRepository->find($id);
 
-            if (!$post) {
-                return new JsonResponse(['error' => 'Post not found'], JsonResponse::HTTP_NOT_FOUND);
-            }
-
-            $user = $this->getUser();
-            if ($post->getUser() !== $user) {
-                return new JsonResponse(['error' => 'You are not authorized to edit this post'], JsonResponse::HTTP_FORBIDDEN);
-            }
-
-            $content = $request->request->get('content', $post->getContent());
-            if ($content !== $post->getContent()) {
-                $post->setContent($content);
-            }
-
-            $filePaths = $post->getFilePaths() ?? [];
-
-            $deleteFilesRaw = $request->request->get('delete_files');
-            if ($deleteFilesRaw) {
-                $filesToDelete = json_decode($deleteFilesRaw, true);
-                if (is_array($filesToDelete)) {
-                    $filePaths = array_filter($filePaths, function ($path) use ($filesToDelete) {
-                        return !in_array($path, $filesToDelete);
-                    });
-
-                    foreach ($filesToDelete as $filePath) {
-                        $fullPath = rtrim($this->getParameter('upload_directory'), '/') . '/' . basename($filePath);
-                        if (file_exists($fullPath)) {
-                            @unlink($fullPath);
-                        }
-                    }
-                }
-            }
-
-            $uploadedFiles = $request->files->get('files');
-            if ($uploadedFiles) {
-                foreach ($uploadedFiles as $uploadedFile) {
-                    if ($uploadedFile instanceof UploadedFile) {
-                        $newFilename = uniqid() . '.' . $uploadedFile->guessExtension();
-                        $uploadDir = rtrim($this->getParameter('upload_directory'), '/');
-
-                        $uploadedFile->move($uploadDir, $newFilename);
-                        $filePaths[] = '/assets/posts/' . $newFilename;
-                    }
-                }
-            }
-
-            $post->setFilePaths(array_values($filePaths));
-            $entityManager->persist($post);
-            $entityManager->flush();
-            $entityManager->refresh($post);
-
-            return new JsonResponse([
-                'message' => 'Post updated successfully',
-                'post' => [
-                    'id' => $post->getId(),
-                    'content' => $post->getContent(),
-                    'file_paths' => $post->getFilePaths(),
-                ],
-            ]);
-        } catch (\Exception $e) {
-            return new JsonResponse([
-                'error' => 'Internal server error: ' . $e->getMessage()
-            ], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+        if (!$post) {
+            return new JsonResponse(['error' => 'Post not found'], JsonResponse::HTTP_NOT_FOUND);
         }
+
+        $user = $this->getUser();
+        if ($post->getUser() !== $user) {
+            return new JsonResponse(['error' => 'You are not authorized to edit this post'], JsonResponse::HTTP_FORBIDDEN);
+        }
+
+        // Check Content-Type
+        if ($request->headers->get('Content-Type') === 'application/json') {
+            $data = json_decode($request->getContent(), true);
+            $content = $data['content'] ?? $post->getContent();
+        } else {
+            $content = $request->request->get('content') ?? $post->getContent();
+        }
+
+        // Check if content is really changed
+        if ($content !== $post->getContent()) {
+            $post->setContent($content);
+        }
+
+        // Handle file deletions and uploads as needed (if relevant)
+        $filePaths = $post->getFilePaths();
+
+        // Update the post entity
+        $post->setContent($content);
+        $post->setFilePaths($filePaths);
+
+        // Persist and flush
+        $entityManager->persist($post);
+        $entityManager->flush();
+
+        // Refresh the entity to ensure changes are reflected
+        $entityManager->refresh($post);
+
+        return new JsonResponse([
+            'message' => 'Post updated successfully',
+            'post' => [
+                'id' => $post->getId(),
+                'content' => $post->getContent(),
+                'file_paths' => $post->getFilePaths(),
+            ],
+        ]);
+    }
+
+    #[Route('/posts/{id}/comments/count', name: 'posts.comments_count', methods: ['GET'])]
+    public function countComments(int $id, PostRepository $postRepository): JsonResponse
+    {
+        $post = $postRepository->find($id);
+
+        if (!$post) {
+            return new JsonResponse(['error' => 'Post not found'], JsonResponse::HTTP_NOT_FOUND);
+        }
+
+        $commentCount = count($post->getComments());
+
+        return new JsonResponse(['comment_count' => $commentCount]);
     }
 }

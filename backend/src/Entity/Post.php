@@ -30,9 +30,14 @@ class Post
     #[ORM\Column(type: Types::JSON, nullable: true)]
     private ?array $filePaths = [];
 
+    #[ORM\OneToMany(mappedBy: 'post', targetEntity: Comment::class, cascade: ['remove'])]
+    private $comments;
+
     public function __construct()
     {
         $this->likes = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->comments = new \Doctrine\Common\Collections\ArrayCollection();
+        
     }
 
     public function getId(): ?int
@@ -118,6 +123,28 @@ class Post
     public function setFilePaths(?array $filePaths): static
     {
         $this->filePaths = $filePaths;
+        return $this;
+    }
+
+    public function addComment(Comment $comment): static
+    {
+        if (!$this->comments->contains($comment)) {
+            $this->comments[] = $comment;
+            $comment->setPost($this);
+        }
+
+        return $this;
+    }
+
+    public function removeComment(Comment $comment): static
+    {
+        if ($this->comments->removeElement($comment)) {
+            // Set the owning side to null (unless already changed)
+            if ($comment->getPost() === $this) {
+                $comment->setPost(null);
+            }
+        }
+
         return $this;
     }
 }

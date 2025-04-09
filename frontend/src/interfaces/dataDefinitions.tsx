@@ -76,6 +76,7 @@ export interface DashboardListProps {
     onSelectUser: (id: string) => void; // Function to pass the selected user ID
 }
 
+//Profile
 export interface ProfileProps {
     username: string;
     banner: string;
@@ -100,4 +101,19 @@ export interface ProfileHeadProps {
     followingCount: number;
     onFollowToggle: () => void;
     isCurrentUser: boolean;
+}
+
+//Post comments
+export interface PostCommentProps {
+    postId: string;
+    updateCommentCount: () => void; 
+}
+
+export interface Comment {
+    id: number;
+    content: string;
+    created_at: string;
+    user_id: number;
+    username: string;
+    avatar: string;
 }
