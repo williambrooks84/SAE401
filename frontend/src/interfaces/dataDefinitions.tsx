@@ -4,6 +4,12 @@ export interface User {
     userId: string;
 }
 
+//ProfileLogin
+export interface ProfileLoginProps {
+    isVisible: boolean;
+    onClose: () => void;
+}
+
 export interface AuthContextType {
     token: string | null;
     user: User | null;  // Add user object to context
@@ -103,6 +109,7 @@ export interface ProfileHeadProps {
     isCurrentUser: boolean;
     isBlocked: boolean;
     onBlockToggle: () => void;
+    blockedMe: boolean;
 }
 
 //Post comments
@@ -116,6 +123,13 @@ export interface Comment {
     content: string;
     created_at: string;
     user_id: number;
+    username: string;
+    avatar: string;
+}
+
+//BlockedUser
+export interface BlockedUserProps {
+    id: number;
     username: string;
     avatar: string;
 }

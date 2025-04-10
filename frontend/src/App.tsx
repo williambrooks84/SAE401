@@ -7,6 +7,7 @@ import Profile from "./components/Profile";
 import EditProfile from "./components/EditProfile";
 import EditPost from "./components/EditPost";
 import ForYou from "./components/ForYou";
+import Blocklist from "./components/Blocklist";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 
@@ -24,6 +25,7 @@ export default function App() {
           <Route path="/editprofile" element={<EditProfile/>} />
           <Route path="/edit/:id" element={<EditPost />} />
           <Route path="/foryou" element={<ForYou />} />
+          <Route path="/blocklist/:userId" element={<Blocklist />} />
         </Routes>
       </Router>
     </AuthProvider>  

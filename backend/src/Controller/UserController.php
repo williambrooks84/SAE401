@@ -14,6 +14,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use App\Repository\TokenRepository;
+use App\Repository\UserBlockRepository;
 use Intervention\Image\ImageManagerStatic as Image;
 use App\Service\FileUploader; // Ensure this service exists in the specified namespace
 
@@ -479,12 +480,62 @@ class UserController extends AbstractController
         }
 
         // Check if the current user has blocked the user
-        $block = $entityManager->getRepository(\App\Entity\UserBlock::class)->findOneBy([
+        $blockerToBlocked = $entityManager->getRepository(\App\Entity\UserBlock::class)->findOneBy([
             'blocker' => $currentUser,
             'blocked' => $userToCheck,
         ]);
 
-        // Return true if blocked, false if not
-        return new JsonResponse(['isBlocked' => $block !== null]);
+        // Check if the user has blocked the current user
+        $blockedToBlocker = $entityManager->getRepository(\App\Entity\UserBlock::class)->findOneBy([
+            'blocker' => $userToCheck,
+            'blocked' => $currentUser,
+        ]);
+
+        $isBlockedByAdmin = in_array('ROLE_USER_BLOCKED', $userToCheck->getRoles());
+
+        // Return the block status in both directions
+        return new JsonResponse([
+            'isBlockedByCurrentUser' => $blockerToBlocked !== null,
+            'isBlockedByProfileUser' => $blockedToBlocker !== null,
+            'isBlockedByAdmin' => $isBlockedByAdmin,
+        ]);
+    }
+
+    #[Route('/blocklist/{id}', name: 'users.blocklist', methods: ['GET'])]
+    public function getBlockList(int $id, UserRepository $userRepository, UserBlockRepository $userBlockRepository): JsonResponse
+    {
+        $currentUser = $this->getUser();
+
+        if (!$currentUser) {
+            return new JsonResponse(['error' => 'Not authenticated'], 401);
+        }
+
+        // Ensure the requested user ID matches the authenticated user's ID
+        if (!$currentUser instanceof User || $currentUser->getId() !== $id) {
+            return new JsonResponse(['error' => 'Access denied'], 403);
+        }
+
+        // Get the block list for the current user
+        $blockList = $userBlockRepository->findBy(['blocker' => $currentUser]);
+
+        // Debugging: Check if blockList is empty
+        if (empty($blockList)) {
+            return new JsonResponse([], 200);
+        }
+
+        $blockedUsers = [];
+        foreach ($blockList as $block) {
+            $blockedUser = $block->getBlocked();
+            if ($blockedUser) {
+                $blockedUsers[] = [
+                    'id' => $blockedUser->getId(),
+                    'username' => $blockedUser->getUsername(),
+                    'avatar' => $blockedUser->getAvatar(),
+                    'blocked_at' => $block->getBlockedAt()->format('Y-m-d H:i:s'),
+                ];
+            }
+        }
+
+        return new JsonResponse($blockedUsers, 200);
     }
 }

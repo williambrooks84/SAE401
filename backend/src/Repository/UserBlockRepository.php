@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Entity\UserBlock;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use App\Entity\User;
 
 /**
  * @extends ServiceEntityRepository<UserBlock>
@@ -40,4 +41,12 @@ class UserBlockRepository extends ServiceEntityRepository
 //            ->getOneOrNullResult()
 //        ;
 //    }
+    public function findByBlocker(User $blocker): array
+        {
+            return $this->createQueryBuilder('ub')
+                ->andWhere('ub.blocker = :blocker')
+                ->setParameter('blocker', $blocker)
+                ->getQuery()
+                ->getResult();
+        }
 }

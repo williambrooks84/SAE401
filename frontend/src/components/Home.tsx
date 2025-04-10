@@ -11,33 +11,35 @@ export default function Home() {
   const [nextPage, setNextPage] = useState<number | null>(1);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
-
   const [autoRefresh, setAutoRefresh] = useState(false);
   const [refreshInterval, setRefreshInterval] = useState(30);
-
 
   // Fetch block status for a specific user
   const checkIfBlocked = async (blockedUserId: string) => {
     if (!token) {
-      console.error("User is not authenticated.");
-      return false; // User is not authenticated, so they are not blocked
+      console.warn("User is not authenticated. Skipping block status check.");
+      return { isBlockedByCurrentUser: false, isBlockedByProfileUser: false, isBlockedByAdmin: false }; // Default return
     }
-  
+
     try {
       const response = await fetch(`http://localhost:8080/users/${blockedUserId}/is-blocked`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-  
+
       if (!response.ok) {
         console.error("Failed to fetch block status");
-        return false; // Consider them not blocked if there's an error
+        return { isBlockedByCurrentUser: false, isBlockedByProfileUser: false, isBlockedByAdmin: false }; // Default return
       }
-  
+
       const data = await response.json();
-      return data.isBlocked;
+      return {
+        isBlockedByCurrentUser: data.isBlockedByCurrentUser,
+        isBlockedByProfileUser: data.isBlockedByProfileUser,
+        isBlockedByAdmin: data.isBlockedByAdmin,
+      };
     } catch (err) {
       console.error("Error fetching block status:", err);
-      return false; // Consider them not blocked if there's an error
+      return { isBlockedByCurrentUser: false, isBlockedByProfileUser: false, isBlockedByAdmin: false }; // Default return
     }
   };
 
@@ -65,8 +67,14 @@ export default function Home() {
       // Filter posts based on block status
       const filteredPosts = await Promise.all(
         data.posts.map(async (post: PostData) => {
-          const isBlocked = await checkIfBlocked(post.user_id);
-          return isBlocked ? null : post; // Exclude posts from blocked users
+          const blockStatus = await checkIfBlocked(post.user_id);
+
+          // Exclude posts if the user is blocked by the current user, has blocked the current user, or is blocked by the admin
+          if (blockStatus.isBlockedByCurrentUser || blockStatus.isBlockedByProfileUser || blockStatus.isBlockedByAdmin) {
+            return null; // Exclude post if blocked
+          }
+
+          return post;
         })
       );
 
@@ -109,8 +117,14 @@ export default function Home() {
 
     const filteredPosts = await Promise.all(
       data.posts.map(async (post: PostData) => {
-        const isBlocked = await checkIfBlocked(post.user_id);
-        return isBlocked ? null : post; // Exclude posts from blocked users
+        const blockStatus = await checkIfBlocked(post.user_id);
+
+        // Exclude posts if the user is blocked by the current user, has blocked the current user, or is blocked by the admin
+        if (blockStatus.isBlockedByCurrentUser || blockStatus.isBlockedByProfileUser || blockStatus.isBlockedByAdmin) {
+          return null; // Exclude post if blocked
+        }
+
+        return post;
       })
     );
 
