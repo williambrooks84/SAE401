@@ -62,11 +62,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(mappedBy: 'followed', targetEntity: 'App\Entity\Follow', cascade: ['persist'])]
     private Collection $following;
 
+    /**
+     * @var Collection<int, UserBlock>
+     */
+    #[ORM\OneToMany(targetEntity: UserBlock::class, mappedBy: 'blocker')]
+    private Collection $userBlocks;
+
     public function __construct()
     {
         $this->value = new ArrayCollection();
         $this->followers = new ArrayCollection();
         $this->following = new ArrayCollection();
+        $this->userBlocks = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -286,6 +293,36 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             }
         }
         return false;
+    }
+
+    /**
+     * @return Collection<int, UserBlock>
+     */
+    public function getUserBlocks(): Collection
+    {
+        return $this->userBlocks;
+    }
+
+    public function addUserBlock(UserBlock $userBlock): static
+    {
+        if (!$this->userBlocks->contains($userBlock)) {
+            $this->userBlocks->add($userBlock);
+            $userBlock->setBlocker($this);
+        }
+
+        return $this;
+    }
+
+    public function removeUserBlock(UserBlock $userBlock): static
+    {
+        if ($this->userBlocks->removeElement($userBlock)) {
+            // set the owning side to null (unless already changed)
+            if ($userBlock->getBlocker() === $this) {
+                $userBlock->setBlocker(null);
+            }
+        }
+
+        return $this;
     }
 
 }

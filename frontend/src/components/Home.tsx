@@ -3,26 +3,38 @@ import Post from "./Post";
 import { PostData } from "../interfaces/dataDefinitions";
 import NavigationBar from "../ui/NavigationBar";
 import Button from "../ui/Button";
+import { useAuth } from "../context/AuthContext"; // Assuming you have an AuthContext
 
 export default function Home() {
+  const { token} = useAuth(); // Getting the logged-in user's info
   const [posts, setPosts] = useState<PostData[]>([]);
-  const [nextPage, setNextPage] = useState<number | null>(1); 
-  const [hasMore, setHasMore] = useState(true); 
+  const [nextPage, setNextPage] = useState<number | null>(1);
+  const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
 
   const [autoRefresh, setAutoRefresh] = useState(false);
   const [refreshInterval, setRefreshInterval] = useState(30);
 
-  // Automatically refresh posts based on interval
-  useEffect(() => {
-    if (!autoRefresh) return;
 
-    const intervalId = setInterval(() => {
-      refreshPosts();
-    }, refreshInterval * 1000);
+  // Fetch block status for a specific user
+  const checkIfBlocked = async (blockedUserId: string) => {
+    try {
+      const response = await fetch(`http://localhost:8080/users/${blockedUserId}/is-blocked`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-    return () => clearInterval(intervalId);
-  }, [autoRefresh, refreshInterval]);
+      if (!response.ok) {
+        console.error("Failed to fetch block status");
+        return false; // Consider them not blocked if there's an error
+      }
+
+      const data = await response.json();
+      return data.isBlocked;
+    } catch (err) {
+      console.error("Error fetching block status:", err);
+      return false; // Consider them not blocked if there's an error
+    }
+  };
 
   // Fetch posts and handle blocked users
   useEffect(() => {
@@ -45,11 +57,17 @@ export default function Home() {
 
       const data = await response.json();
 
-      const filteredPosts = data.posts.filter((post: PostData) => post.is_blocked !== true);
+      // Filter posts based on block status
+      const filteredPosts = await Promise.all(
+        data.posts.map(async (post: PostData) => {
+          const isBlocked = await checkIfBlocked(post.user_id);
+          return isBlocked ? null : post; // Exclude posts from blocked users
+        })
+      );
 
+      // Remove null posts (blocked users' posts)
       setPosts((prevPosts) => {
-        const postIds = new Set(prevPosts.map((post) => post.id));
-        return [...prevPosts, ...filteredPosts.filter((post: PostData) => !postIds.has(post.id))];
+        return [...prevPosts, ...filteredPosts.filter((post) => post !== null)];
       });
 
       if (data.next_page) {
@@ -62,26 +80,9 @@ export default function Home() {
     }
 
     fetchPosts();
-  }, [nextPage]); 
+  }, [nextPage, loading, hasMore, token]);
 
-
-  useEffect(() => {
-    function handleScroll() {
-      if (
-        window.innerHeight + document.documentElement.scrollTop >=
-        document.documentElement.offsetHeight - 100
-      ) {
-
-        if (hasMore && !loading && nextPage !== null) {
-
-        }
-      }
-    }
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [hasMore, loading, nextPage]);
-
+  // Refresh posts
   const refreshPosts = async () => {
     setLoading(true);
     setHasMore(true);
@@ -101,8 +102,14 @@ export default function Home() {
 
     const data = await response.json();
 
-    const filteredPosts = data.posts.filter((post: PostData) => post.is_blocked !== true);
-    setPosts(filteredPosts);
+    const filteredPosts = await Promise.all(
+      data.posts.map(async (post: PostData) => {
+        const isBlocked = await checkIfBlocked(post.user_id);
+        return isBlocked ? null : post; // Exclude posts from blocked users
+      })
+    );
+
+    setPosts(filteredPosts.filter((post) => post !== null));
 
     if (data.next_page) {
       setNextPage(data.next_page);
@@ -112,7 +119,19 @@ export default function Home() {
 
     setLoading(false);
   };
-  
+
+  // Auto-refresh posts based on interval
+  useEffect(() => {
+    if (!autoRefresh) return;
+
+    const intervalId = setInterval(() => {
+      refreshPosts();
+    }, refreshInterval * 1000); // refresh every `refreshInterval` seconds
+
+    return () => clearInterval(intervalId); // Clean up interval on component unmount or change
+  }, [autoRefresh, refreshInterval]);
+
+  // Save auto-refresh settings to localStorage
   useEffect(() => {
     const savedAutoRefresh = localStorage.getItem("autoRefresh");
     const savedInterval = localStorage.getItem("refreshInterval");

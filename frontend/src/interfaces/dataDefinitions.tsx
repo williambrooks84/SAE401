@@ -101,6 +101,8 @@ export interface ProfileHeadProps {
     followingCount: number;
     onFollowToggle: () => void;
     isCurrentUser: boolean;
+    isBlocked: boolean;
+    onBlockToggle: () => void;
 }
 
 //Post comments
