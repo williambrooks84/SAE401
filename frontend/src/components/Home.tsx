@@ -6,7 +6,7 @@ import Button from "../ui/Button";
 import { useAuth } from "../context/AuthContext"; // Assuming you have an AuthContext
 
 export default function Home() {
-  const { token} = useAuth(); // Getting the logged-in user's info
+  const { token } = useAuth(); // Getting the logged-in user's info
   const [posts, setPosts] = useState<PostData[]>([]);
   const [nextPage, setNextPage] = useState<number | null>(1);
   const [hasMore, setHasMore] = useState(true);
@@ -18,16 +18,21 @@ export default function Home() {
 
   // Fetch block status for a specific user
   const checkIfBlocked = async (blockedUserId: string) => {
+    if (!token) {
+      console.error("User is not authenticated.");
+      return false; // User is not authenticated, so they are not blocked
+    }
+  
     try {
       const response = await fetch(`http://localhost:8080/users/${blockedUserId}/is-blocked`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
+  
       if (!response.ok) {
         console.error("Failed to fetch block status");
         return false; // Consider them not blocked if there's an error
       }
-
+  
       const data = await response.json();
       return data.isBlocked;
     } catch (err) {
