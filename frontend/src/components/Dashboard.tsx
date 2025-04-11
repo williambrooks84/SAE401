@@ -5,6 +5,7 @@ import DashboardList from "../ui/DashboardList";
 import FormLabel from "../ui/FormLabel";
 import FormBox from "../ui/FormBox";
 import Button from "../ui/Button";
+import { API_BASE_URL } from "../utils/config";
 
 export default function Dashboard() {
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -19,7 +20,7 @@ export default function Dashboard() {
 
     useEffect(() => {
         if (token) {
-            fetch("http://localhost:8080/token", {
+            fetch(`${API_BASE_URL}/token`, {
                 method: "GET",
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -78,7 +79,7 @@ export default function Dashboard() {
                 return;
             }
     
-            fetch('http://localhost:8080/update', {
+            fetch(`${API_BASE_URL}/update`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',

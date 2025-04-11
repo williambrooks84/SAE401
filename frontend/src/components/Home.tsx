@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Post from "./Post";
 import { PostData } from "../interfaces/dataDefinitions";
 import NavigationBar from "../ui/NavigationBar";
+import { API_BASE_URL } from "../utils/config";
 
 export default function Home() {
   const [posts, setPosts] = useState<PostData[]>([]);
@@ -15,7 +16,7 @@ export default function Home() {
 
       setLoading(true);
 
-      const response = await fetch(`http://localhost:8080/posts?page=${page}`, {
+      const response = await fetch(`${API_BASE_URL}/posts?page=${page}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",

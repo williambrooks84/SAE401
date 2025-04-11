@@ -4,6 +4,7 @@ import Logo from "../ui/Logo";
 import logo from "../assets/logo-temp.png";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../utils/config";
 
 export default function Login() {
     const [email, setEmail] = useState('');
@@ -38,7 +39,7 @@ export default function Login() {
         }
 
         if (valid) {
-            fetch('http://localhost:8080/login', {
+            fetch(`${API_BASE_URL}/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password }),

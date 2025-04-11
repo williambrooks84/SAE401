@@ -5,6 +5,7 @@ import TextArea from "../ui/TextArea";
 import FormLabel from "../ui/FormLabel";
 import Button from "../ui/Button";
 import LetterCounter from "../ui/LetterCounter";
+import { API_BASE_URL } from "../utils/config";
 
 export default function Publish() {
     const [post, setPost] = useState('');
@@ -42,7 +43,7 @@ export default function Publish() {
 
         const token = localStorage.getItem("access_token");
 
-        const response = await fetch("http://localhost:8080/posts", {
+        const response = await fetch(`${API_BASE_URL}/posts`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

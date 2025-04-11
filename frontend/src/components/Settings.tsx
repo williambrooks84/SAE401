@@ -1,4 +1,5 @@
 import { CrossIcon } from "../assets/icons";
+import { Link } from "react-router-dom";
 
 interface ProfileLoginProps {
     isVisible: boolean;
@@ -13,7 +14,7 @@ export default function ProfileLogin({ isVisible, onClose }: ProfileLoginProps) 
             <button onClick={onClose} className="absolute top-3 left-3">
                 <CrossIcon className="w-6 h-6" />
             </button>
-            <a href="/dashboard" className="text-center text-lg font-bold">Administrator Dashboard</a>
+            <Link to="/dashboard" aria-label="Dashboard" className="text-center text-lg font-bold">Administrator Dashboard</Link>
         </div>
     )
 }

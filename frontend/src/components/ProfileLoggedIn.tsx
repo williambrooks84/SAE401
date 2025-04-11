@@ -1,6 +1,7 @@
 import Button from "../ui/Button";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { API_BASE_URL } from "../utils/config";
 
 export default function ProfileLoggedIn() {
   const navigate = useNavigate();
@@ -10,7 +11,7 @@ export default function ProfileLoggedIn() {
   useEffect(() => {
     if (token) {
       // Fetch user data by token
-      fetch("http://localhost:8080/token", {  // Updated endpoint name here
+      fetch(`${API_BASE_URL}/token`, {  // Updated endpoint name here
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,  // Pass the token for authentication
