@@ -17,7 +17,6 @@ class Follow
     #[ORM\JoinColumn(nullable: false)]
     private User $followed;
 
-    // Getter and setter for follower
     public function getFollower(): User
     {
         return $this->follower;
@@ -29,7 +28,6 @@ class Follow
         return $this;
     }
 
-    // Getter and setter for followed
     public function getFollowed(): User
     {
         return $this->followed;

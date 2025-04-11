@@ -4,6 +4,12 @@ export interface User {
     userId: string;
 }
 
+//ProfileLogin
+export interface ProfileLoginProps {
+    isVisible: boolean;
+    onClose: () => void;
+}
+
 export interface AuthContextType {
     token: string | null;
     user: User | null;  // Add user object to context
@@ -35,6 +41,8 @@ export interface PostProps {
     content: string;
     created_at: string;
     is_blocked?: boolean;
+    file_paths?: string[];
+    className?: string;
 }
 
 //PostData
@@ -46,10 +54,12 @@ export interface PostData {
     content: string;
     created_at: string;
     is_blocked?: boolean;
+    file_paths?: string[];
 }
 
 //TextArea
 export interface TextAreaProps {
+    name?: string;
     placeholder: string;
     value: string;
     onChange: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
@@ -73,6 +83,7 @@ export interface DashboardListProps {
     onSelectUser: (id: string) => void; // Function to pass the selected user ID
 }
 
+//Profile
 export interface ProfileProps {
     username: string;
     banner: string;
@@ -97,4 +108,29 @@ export interface ProfileHeadProps {
     followingCount: number;
     onFollowToggle: () => void;
     isCurrentUser: boolean;
+    isBlocked: boolean;
+    onBlockToggle: () => void;
+    blockedMe: boolean;
+}
+
+//Post comments
+export interface PostCommentProps {
+    postId: string;
+    updateCommentCount: () => void; 
+}
+
+export interface Comment {
+    id: number;
+    content: string;
+    created_at: string;
+    user_id: number;
+    username: string;
+    avatar: string;
+}
+
+//BlockedUser
+export interface BlockedUserProps {
+    id: number;
+    username: string;
+    avatar: string;
 }

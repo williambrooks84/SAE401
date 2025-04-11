@@ -8,7 +8,7 @@ export default function NavigationBar() {
     const [isSettingsVisible, setIsSettingsVisible] = useState(false);
     return (
         <>
-            <nav className="sticky top-0 flex w-full bg-primary justify-around items-center md:justify-center md:gap-20 px-4 py-2 bg-nav-green z-10">
+            <nav className="sticky top-0 flex w-full bg-primary justify-around items-center md:justify-center md:gap-20 px-4 py-3 bg-nav-green z-10">
                 <ul className="flex w-full justify-around items-center md:justify-center md:gap-20">
                 <li>
                     <a href="/" aria-label="Home">

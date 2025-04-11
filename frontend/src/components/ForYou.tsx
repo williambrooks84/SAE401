@@ -6,14 +6,13 @@ import Button from "../ui/Button";
 import { useAuth } from "../context/AuthContext";
 
 export default function ForYou() {
-  const { token } = useAuth(); // Retrieve the token from the AuthContext
+  const { token } = useAuth(); 
   const [posts, setPosts] = useState<PostData[]>([]);
   const [loading, setLoading] = useState(false);
 
   const [autoRefresh, setAutoRefresh] = useState(false);
   const [refreshInterval, setRefreshInterval] = useState(30);
 
-  // Automatically refresh posts based on interval
   useEffect(() => {
     if (!autoRefresh) return;
 
@@ -24,7 +23,6 @@ export default function ForYou() {
     return () => clearInterval(intervalId);
   }, [autoRefresh, refreshInterval]);
 
-  // Fetch posts from the /posts/following endpoint
   useEffect(() => {
     async function fetchPosts() {
       if (loading) return;
@@ -118,6 +116,7 @@ export default function ForYou() {
               username={post.username}
               content={post.content}
               created_at={post.created_at}
+              file_paths={post.file_paths}
             />
           ))
         )}

@@ -18,14 +18,11 @@ class AccessTokenHandler implements AccessTokenHandlerInterface
 
     public function getUserBadgeFrom(string $accessToken): UserBadge
     {
-        // Find the token from the repository
         $accessToken = $this->repository->findOneByValue($accessToken);
         
         if (null === $accessToken || !$accessToken->getIsValid()) {
             throw new BadCredentialsException('Invalid credentials.');
         }
-
-        // Return a UserBadge object containing the user identifier (e.g., user ID or email)
         return new UserBadge($accessToken->getUser()->getEmail());
     }
 
@@ -37,7 +34,6 @@ class AccessTokenHandler implements AccessTokenHandlerInterface
      */
     public function supports(Request $request): ?bool
     {
-         // Exclude the /posts route from token handling
          if ($request->getPathInfo() === '/posts') {
               return false;
          }

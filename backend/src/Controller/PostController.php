@@ -2,23 +2,30 @@
 
 namespace App\Controller;
 
-use App\Entity\Post;
-use App\Entity\Like;
-use App\Entity\User;
-use App\Repository\PostRepository;
-use App\Repository\UserRepository;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\HttpFoundation\Request;
+use App\Service\FileUploader;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use App\Repository\PostRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use App\Entity\Post;
+use App\Entity\Like;
+use App\Repository\UserRepository;
+use App\Entity\User;
 
 class PostController extends AbstractController
 {
+    private FileUploader $fileUploader;
+
+    public function __construct(FileUploader $fileUploader)
+    {
+        $this->fileUploader = $fileUploader;
+    }
+
     #[Route('/posts', name: 'posts.index', methods: ['GET'])]
     public function index(PostRepository $postRepository, Request $request): JsonResponse
     {
-
         $page = $request->query->get('page', 1);
         $offset = ($page - 1) * 5;
 
@@ -30,15 +37,12 @@ class PostController extends AbstractController
 
         $posts = [];
         foreach ($paginator as $post) {
-            // Check if the user is blocked
             $user = $post->getUser();
             $roles = $user->getRoles();
-            $isBlocked = in_array('ROLE_USER_BLOCKED', $roles);  // Check if the user has the 'ROLE_USER_BLOCKED'
+            $isBlocked = in_array('ROLE_USER_BLOCKED', $roles);
 
-            // If the user is blocked, change the post content
             $content = $isBlocked ? 'This user has been blocked for violation of terms of service' : $post->getContent();
 
-            // Build the post data array
             $posts[] = [
                 'id' => $post->getId(),
                 'user_id' => $user->getId(),
@@ -46,7 +50,8 @@ class PostController extends AbstractController
                 'created_at' => $post->getCreatedAt()->format('Y-m-d H:i:s'),
                 'avatar' => $user->getAvatar(),
                 'username' => $user->getUsername(),
-                'is_blocked' => $isBlocked,  // Optionally include 'is_blocked' flag to inform the frontend
+                'file_paths' => $post->getFilePaths(),
+                'is_blocked' => $isBlocked,
             ];
         }
 
@@ -64,39 +69,56 @@ class PostController extends AbstractController
     #[Route('/posts', name: 'posts.create', methods: ['POST'])]
     public function createPost(Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
-        $data = json_decode($request->getContent(), true);
-
-        if (!isset($data['content']) || empty(trim($data['content']))) {
-            return new JsonResponse(['error' => 'Content is required'], 400);
-        }
-
-        if (!$this->getUser()) {
+        $user = $this->getUser();
+        if (!$user) {
             return new JsonResponse(['error' => 'User not authenticated'], 401);
         }
 
+        $content = $request->request->get('content');
+        $files = $request->files->all()['files'] ?? [];
+        $filePaths = [];
+
+        if (empty(trim($content)) && empty($files)) {
+            return new JsonResponse(['error' => 'Content or at least one file is required'], 400);
+        }
+
+        if ($files) {
+            $files = is_array($files) ? $files : [$files]; // Ensure $files is always an array
+
+            foreach ($files as $file) {
+                if (!in_array($file->getMimeType(), ['image/jpeg', 'image/png', 'video/mp4'])) {
+                    return new JsonResponse(['error' => 'Only JPG, PNG images and MP4 videos are allowed'], 400);
+                }
+
+                $fileName = uniqid('post_') . '.' . $file->guessExtension();
+
+                try {
+                    $file->move($this->getParameter('kernel.project_dir') . '/public/assets/posts/', $fileName);
+                    $filePaths[] = '/assets/posts/' . $fileName;
+                } catch (\Exception $e) {
+                    return new JsonResponse(['error' => 'Error moving file: ' . $e->getMessage()], 500);
+                }
+            }
+        }
+
         $post = new Post();
-        $post->setContent($data['content']);
+        $post->setContent($content);
         $post->setCreatedAt(new \DateTime());
-        $post->setUser($this->getUser());
+        $post->setUser($user);
+        $post->setFilePaths($filePaths); 
 
         $entityManager->persist($post);
         $entityManager->flush();
 
         return new JsonResponse([
             'message' => 'Post created successfully',
-            'post' => [
-                'id' => $post->getId(),
-                'content' => $post->getContent(),
-                'created_at' => $post->getCreatedAt()->format('Y-m-d H:i:s'),
-                'username' => $post->getUser()->getUsername(),
-            ]
+            'file_paths' => $filePaths,
         ], 201);
     }
 
     #[Route('/posts/user/{userId}', name: 'posts.get_by_user', methods: ['GET'])]
     public function getPostsByUser(int $userId, PostRepository $postRepository): JsonResponse
     {
-        // Fetch posts for the userId
         $posts = $postRepository->findBy(['user' => $userId], ['created_at' => 'DESC']);
         $isBlocked = false;
 
@@ -105,7 +127,7 @@ class PostController extends AbstractController
         }
 
         $isBlocked = in_array('ROLE_USER_BLOCKED', $posts[0]->getUser()->getRoles());
-    
+
         $response = [];
         foreach ($posts as $post) {
             $response[] = [
@@ -116,13 +138,13 @@ class PostController extends AbstractController
                 'avatar' => $post->getUser()->getAvatar(),
                 'username' => $post->getUser()->getUsername(),
                 'is_blocked' => $isBlocked,
-
+                'file_paths' => $post->getFilePaths(),
             ];
         }
-    
+
         return $this->json(['posts' => $response]);
     }
-    
+
     #[Route('/posts/{id}', name: 'posts.delete', methods: ['DELETE'])]
     public function deletePost(int $id, PostRepository $postRepository, EntityManagerInterface $entityManager): JsonResponse
     {
@@ -151,11 +173,9 @@ class PostController extends AbstractController
             return new JsonResponse(['error' => 'Post not found'], 404);
         }
 
-        // Check if user already liked the post (we can use a many-to-many relation with a `Like` entity)
-        $user = $this->getUser(); // Assuming user is authenticated and can be retrieved this way
+        $user = $this->getUser();
 
-        // Check if the user already liked the post
-        $existingLike = $post->getLikes()->filter(function($like) use ($user) {
+        $existingLike = $post->getLikes()->filter(function ($like) use ($user) {
             return $like->getUser() === $user;
         })->first();
 
@@ -173,7 +193,6 @@ class PostController extends AbstractController
         return new JsonResponse(['message' => 'Post liked successfully']);
     }
 
-    // Unlike a post
     #[Route('/posts/{id}/unlike', name: 'posts.unlike', methods: ['DELETE'])]
     public function unlikePost(int $id, PostRepository $postRepository, EntityManagerInterface $entityManager): JsonResponse
     {
@@ -183,9 +202,9 @@ class PostController extends AbstractController
             return new JsonResponse(['error' => 'Post not found'], 404);
         }
 
-        $user = $this->getUser(); // Assuming user is authenticated
+        $user = $this->getUser();
 
-        $existingLike = $post->getLikes()->filter(function($like) use ($user) {
+        $existingLike = $post->getLikes()->filter(function ($like) use ($user) {
             return $like->getUser() === $user;
         })->first();
 
@@ -202,24 +221,25 @@ class PostController extends AbstractController
     #[Route('/posts/{id}/like-status', name: 'posts.like_status', methods: ['GET'])]
     public function getLikeStatus(int $id, PostRepository $postRepository): JsonResponse
     {
-        // Fetch the post by its ID
         $post = $postRepository->find($id);
 
         if (!$post) {
             return new JsonResponse(['error' => 'Post not found'], 404);
         }
 
-        // Get the number of likes for the post (assuming `getLikes` returns a collection of likes related to the post)
         $likeCount = count($post->getLikes());
 
-        // You can also check if the current user liked the post, if needed:
         $user = $this->getUser();
         if (!$user instanceof User) {
-            return $this->json(['error' => 'User not authenticated'], JsonResponse::HTTP_UNAUTHORIZED);
+            return new JsonResponse([
+                'like_count' => $likeCount,
+                'liked' => false,
+            ]);
         }
+
         $userLiked = $post->getLikes()->filter(function ($like) use ($user) {
             return $like->getUser() === $user;
-        })->isEmpty() ? false : true; // Whether the current user has liked the post
+        })->isEmpty() ? false : true;
 
         return new JsonResponse([
             'like_count' => $likeCount,
@@ -228,22 +248,24 @@ class PostController extends AbstractController
     }
 
     #[Route('/posts/following', name: 'posts.following', methods: ['GET'])]
-    public function getPostsByFollowing(PostRepository $postRepository, UserRepository $userRepository): JsonResponse {
+    public function getPostsByFollowing(PostRepository $postRepository, UserRepository $userRepository): JsonResponse
+    {
         $user = $this->getUser();
         if (!$user) {
             return $this->json(['error' => 'User not authenticated'], JsonResponse::HTTP_UNAUTHORIZED);
         }
 
-        // Fetch followed user IDs
         $followedUserIds = $userRepository->findFollowedUserIds($user);
 
-        // Debug: Check if user is following anyone
         if (empty($followedUserIds)) {
             return $this->json(['posts' => []]);
         }
 
-        // Fetch posts from followed users
         $posts = $postRepository->findByUsers($followedUserIds);
+
+        usort($posts, function ($a, $b) {
+            return $b->getCreatedAt() <=> $a->getCreatedAt();
+        });
 
         $response = array_map(function ($post) {
             $user = $post->getUser();
@@ -254,6 +276,7 @@ class PostController extends AbstractController
                 'created_at' => $post->getCreatedAt()->format('Y-m-d H:i:s'),
                 'avatar' => $user->getAvatar(),
                 'username' => $user->getUsername(),
+                'file_paths' => $post->getFilePaths(),
                 'is_blocked' => in_array('ROLE_USER_BLOCKED', $user->getRoles()),
             ];
         }, $posts);
@@ -264,5 +287,137 @@ class PostController extends AbstractController
         ]);
     }
 
+    #[Route('/posts/{id}', name: 'posts.fetch', methods: ['GET'])]
+    public function GetPostById(PostRepository $postRepository, int $id): JsonResponse
+    {
+        $post = $postRepository->find($id);
+
+        if (!$post) {
+            return $this->json(['error' => 'Post not found'], JsonResponse::HTTP_NOT_FOUND);
+        }
+
+        $user = $post->getUser();
+
+        return $this->json([
+            'id' => $post->getId(),
+            'user_id' => $user->getId(),
+            'content' => $post->getContent(),
+            'created_at' => $post->getCreatedAt()->format('Y-m-d H:i:s'),
+            'avatar' => $user->getAvatar(),
+            'username' => $user->getUsername(),
+            'file_paths' => $post->getFilePaths(),
+            'is_blocked' => in_array('ROLE_USER_BLOCKED', $user->getRoles()),
+        ]);
+    }
+
+    #[Route('/posts/{id}', name: 'posts.edit', methods: ['PATCH'])]
+    public function EditPost(
+        int $id,
+        Request $request,
+        PostRepository $postRepository,
+        EntityManagerInterface $entityManager
+    ): JsonResponse {
+        $post = $postRepository->find($id);
+
+        if (!$post) {
+            return new JsonResponse(['error' => 'Post not found'], JsonResponse::HTTP_NOT_FOUND);
+        }
+
+        $user = $this->getUser();
+        if ($post->getUser() !== $user) {
+            return new JsonResponse(['error' => 'You are not authorized to edit this post'], JsonResponse::HTTP_FORBIDDEN);
+        }
+        if ($request->headers->get('Content-Type') === 'application/json') {
+            $data = json_decode($request->getContent(), true);
+            $content = $data['content'] ?? $post->getContent();
+        } else {
+            $content = $request->request->get('content') ?? $post->getContent();
+        }
+
+        if ($content !== $post->getContent()) {
+            $post->setContent($content);
+        }
+
+        $filePaths = $post->getFilePaths();
+
+        $post->setContent($content);
+        $post->setFilePaths($filePaths);
+
+        $entityManager->persist($post);
+        $entityManager->flush();
+
+        $entityManager->refresh($post);
+
+        return new JsonResponse([
+            'message' => 'Post updated successfully',
+            'post' => [
+                'id' => $post->getId(),
+                'content' => $post->getContent(),
+                'file_paths' => $post->getFilePaths(),
+            ],
+        ]);
+    }
+
+    #[Route('/posts/{id}/comments/count', name: 'posts.comments_count', methods: ['GET'])]
+    public function countComments(int $id, PostRepository $postRepository): JsonResponse
+    {
+        $post = $postRepository->find($id);
+
+        if (!$post) {
+            return new JsonResponse(['error' => 'Post not found'], JsonResponse::HTTP_NOT_FOUND);
+        }
+
+        $commentCount = count($post->getComments());
+
+        return new JsonResponse(['comment_count' => $commentCount]);
+    }
+
+    #[Route('/dashboardposts', name: 'posts.dashboardindex', methods: ['GET'])]
+    public function dashboardIndex(PostRepository $postRepository): JsonResponse
+    {
+        $paginator = $postRepository->paginateAllOrderedByLatest(0, PHP_INT_MAX);
+
+        if (!$paginator->count()) {
+            return $this->json(['error' => 'No posts found'], JsonResponse::HTTP_NOT_FOUND);
+        }
+
+        $posts = [];
+        foreach ($paginator as $post) {
+            $user = $post->getUser();
+            $roles = $user->getRoles();
+            $isBlocked = in_array('ROLE_USER_BLOCKED', $roles);
+
+            $content = $isBlocked ? 'This user has been blocked for violation of terms of service' : $post->getContent();
+
+            $posts[] = [
+                'id' => $post->getId(),
+                'user_id' => $user->getId(),
+                'content' => $content,
+                'created_at' => $post->getCreatedAt()->format('Y-m-d H:i:s'),
+                'avatar' => $user->getAvatar(),
+                'username' => $user->getUsername(),
+                'file_paths' => $post->getFilePaths(),
+                'is_blocked' => $isBlocked,
+            ];
+        }
+
+        return $this->json(['posts' => $posts]);
+    }
+
+    #[Route('/censor/{id}', name: 'posts.censor', methods: ['PATCH'])]
+    public function censorPost(int $id, PostRepository $postRepository, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $post = $postRepository->find($id);
+        if (!$post) {
+            return new JsonResponse(['error' => 'Post not found'], 404);
+        }
+    
+        $post->setContent('This post has been censored');
+        $post->setFilePaths([]);
+        $entityManager->persist($post);
+        $entityManager->flush();
+    
+        return new JsonResponse(['message' => 'Post censored successfully']);
+    }
     
 }

@@ -30,7 +30,6 @@ class Like {
         $this->createdAt = new \DateTimeImmutable();
     }
 
-    // Getters & Setters
     public function getId(): ?int {
         return $this->id;
     }

@@ -6,14 +6,12 @@ interface LikeProps {
 }
 
 export default function Like({ liked, setLiked }: LikeProps) {
-  // This function toggles the 'liked' state.
   const handleLikeToggle = () => {
-    setLiked(!liked);  // Toggle the liked state
+    setLiked(!liked); 
   };
 
   return (
     <button onClick={handleLikeToggle} className="focus:outline-none">
-      {/* Conditionally render the icon based on the 'liked' state */}
       {liked ? <HeartIconTriggered /> : <HeartIcon className="text-gray-500" />}
     </button>
   );

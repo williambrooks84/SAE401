@@ -3,28 +3,45 @@ import Post from "./Post";
 import { PostData } from "../interfaces/dataDefinitions";
 import NavigationBar from "../ui/NavigationBar";
 import Button from "../ui/Button";
+import { useAuth } from "../context/AuthContext"; 
 
 export default function Home() {
+  const { token } = useAuth(); 
   const [posts, setPosts] = useState<PostData[]>([]);
-  const [nextPage, setNextPage] = useState<number | null>(1); 
-  const [hasMore, setHasMore] = useState(true); 
+  const [nextPage, setNextPage] = useState<number | null>(1);
+  const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
-
   const [autoRefresh, setAutoRefresh] = useState(false);
   const [refreshInterval, setRefreshInterval] = useState(30);
 
-  // Automatically refresh posts based on interval
-  useEffect(() => {
-    if (!autoRefresh) return;
+  const checkIfBlocked = async (blockedUserId: string) => {
+    if (!token) {
+      console.warn("User is not authenticated. Skipping block status check.");
+      return { isBlockedByCurrentUser: false, isBlockedByProfileUser: false, isBlockedByAdmin: false }; 
+    }
 
-    const intervalId = setInterval(() => {
-      refreshPosts();
-    }, refreshInterval * 1000);
+    try {
+      const response = await fetch(`http://localhost:8080/users/${blockedUserId}/is-blocked`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-    return () => clearInterval(intervalId);
-  }, [autoRefresh, refreshInterval]);
+      if (!response.ok) {
+        console.error("Failed to fetch block status");
+        return { isBlockedByCurrentUser: false, isBlockedByProfileUser: false, isBlockedByAdmin: false };
+      }
 
-  // Fetch posts and handle blocked users
+      const data = await response.json();
+      return {
+        isBlockedByCurrentUser: data.isBlockedByCurrentUser,
+        isBlockedByProfileUser: data.isBlockedByProfileUser,
+        isBlockedByAdmin: data.isBlockedByAdmin,
+      };
+    } catch (err) {
+      console.error("Error fetching block status:", err);
+      return { isBlockedByCurrentUser: false, isBlockedByProfileUser: false, isBlockedByAdmin: false }; 
+    }
+  };
+
   useEffect(() => {
     async function fetchPosts() {
       if (loading || !hasMore || nextPage === null) return;
@@ -45,11 +62,23 @@ export default function Home() {
 
       const data = await response.json();
 
-      const filteredPosts = data.posts.filter((post: PostData) => post.is_blocked !== true);
+      const filteredPosts = await Promise.all(
+        data.posts.map(async (post: PostData) => {
+          const blockStatus = await checkIfBlocked(post.user_id);
+
+          if (blockStatus.isBlockedByCurrentUser || blockStatus.isBlockedByProfileUser || blockStatus.isBlockedByAdmin) {
+            return null; 
+          }
+
+          return post;
+        })
+      );
 
       setPosts((prevPosts) => {
-        const postIds = new Set(prevPosts.map((post) => post.id));
-        return [...prevPosts, ...filteredPosts.filter((post: PostData) => !postIds.has(post.id))];
+        const uniquePosts = [...prevPosts, ...filteredPosts.filter((post) => post !== null)];
+        return uniquePosts.filter((post, index, self) => 
+          post && self.findIndex(p => p?.id === post.id) === index
+        );
       });
 
       if (data.next_page) {
@@ -62,25 +91,7 @@ export default function Home() {
     }
 
     fetchPosts();
-  }, [nextPage]); 
-
-
-  useEffect(() => {
-    function handleScroll() {
-      if (
-        window.innerHeight + document.documentElement.scrollTop >=
-        document.documentElement.offsetHeight - 100
-      ) {
-
-        if (hasMore && !loading && nextPage !== null) {
-
-        }
-      }
-    }
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [hasMore, loading, nextPage]);
+  }, [nextPage, loading, hasMore, token]);
 
   const refreshPosts = async () => {
     setLoading(true);
@@ -101,8 +112,19 @@ export default function Home() {
 
     const data = await response.json();
 
-    const filteredPosts = data.posts.filter((post: PostData) => post.is_blocked !== true);
-    setPosts(filteredPosts);
+    const filteredPosts = await Promise.all(
+      data.posts.map(async (post: PostData) => {
+        const blockStatus = await checkIfBlocked(post.user_id);
+
+        if (blockStatus.isBlockedByCurrentUser || blockStatus.isBlockedByProfileUser || blockStatus.isBlockedByAdmin) {
+          return null; 
+        }
+
+        return post;
+      })
+    );
+
+    setPosts(filteredPosts.filter((post) => post !== null));
 
     if (data.next_page) {
       setNextPage(data.next_page);
@@ -112,7 +134,17 @@ export default function Home() {
 
     setLoading(false);
   };
-  
+
+  useEffect(() => {
+    if (!autoRefresh) return;
+
+    const intervalId = setInterval(() => {
+      refreshPosts();
+    }, refreshInterval * 1000);
+
+    return () => clearInterval(intervalId);
+  }, [autoRefresh, refreshInterval]);
+
   useEffect(() => {
     const savedAutoRefresh = localStorage.getItem("autoRefresh");
     const savedInterval = localStorage.getItem("refreshInterval");
@@ -152,6 +184,7 @@ export default function Home() {
               username={post.username}
               content={post.content}
               created_at={post.created_at}
+              file_paths={post.file_paths}
             />
           ))
         )}

@@ -14,7 +14,7 @@ class FollowController extends AbstractController
     #[Route('/follow/{userId}', name: 'follow', methods: ['POST'])]
     public function follow(int $userId, EntityManagerInterface $entityManager): JsonResponse
     {
-        $currentUser = $this->getUser(); // Get currently authenticated user
+        $currentUser = $this->getUser();
 
         if (!$currentUser instanceof User) {
             return new JsonResponse(['error' => 'Invalid user'], 400);
@@ -26,15 +26,12 @@ class FollowController extends AbstractController
             return new JsonResponse(['error' => 'User not found'], 404);
         }
 
-        // Ensure the user can't follow themselves
         if ($currentUser === $userToFollow) {
             return new JsonResponse(['error' => 'You cannot follow yourself'], 400);
         }
 
-        // Call the follow method on the User entity (this now requires the entity manager)
         $currentUser->follow($userToFollow, $entityManager);
 
-        // Flush changes to the database
         $entityManager->flush();
 
         return new JsonResponse(['success' => true]);
@@ -50,7 +47,6 @@ class FollowController extends AbstractController
             return new JsonResponse(['error' => 'User not found'], 404);
         }
 
-        // Check if user is following
         $follow = $entityManager->getRepository(Follow::class)->findOneBy([
             'follower' => $currentUser,
             'followed' => $userToUnfollow
@@ -58,7 +54,7 @@ class FollowController extends AbstractController
 
         if ($follow) {
             $entityManager->remove($follow);
-            $entityManager->flush();  // Persist the changes
+            $entityManager->flush(); 
         }
 
         return new JsonResponse(['success' => true]);

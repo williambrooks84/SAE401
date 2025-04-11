@@ -3,10 +3,10 @@ import ProfileLogin from "./ProfileLogin";
 import ProfileLoggedIn from "./ProfileLoggedIn";
 import { CrossIcon } from "../assets/icons";
 import { ProfileMenuProps } from "../interfaces/styleDefinitions";
-import { useAuth } from "../context/AuthContext"; // Import useAuth
+import { useAuth } from "../context/AuthContext"; 
 
 const ProfileMenu: React.FC<ProfileMenuProps> = ({ isVisible, onClose }) => {
-  const { token } = useAuth(); // Access token from AuthContext
+  const { token } = useAuth();
 
   if (!isVisible) return null;
 
@@ -15,7 +15,7 @@ const ProfileMenu: React.FC<ProfileMenuProps> = ({ isVisible, onClose }) => {
       <button onClick={onClose} className="absolute top-3 left-3">
         <CrossIcon />
       </button>
-      {token ? <ProfileLoggedIn /> : <ProfileLogin />} {/* Use token from AuthContext */}
+      {token ? <ProfileLoggedIn /> : <ProfileLogin />}
     </div>
   );
 };

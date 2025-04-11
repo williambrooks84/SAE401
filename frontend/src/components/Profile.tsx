@@ -12,10 +12,42 @@ export default function Profile() {
   const [posts, setPosts] = useState<PostData[]>([]);
   const [loading, setLoading] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
+  const [isBlocked, setIsBlocked] = useState<boolean>(false); 
+  const [blockedMe, setBlockedMe] = useState<boolean>(false); 
   const { user, token } = useAuth();
   const connectedUserId = user?.userId;
 
-  // Fetch profile data
+  useEffect(() => {
+    if (!userId || !token) return;
+
+    const storedIsBlocked = localStorage.getItem(`isBlocked_${userId}`);
+    const storedBlockedMe = localStorage.getItem(`blockedMe_${userId}`);
+    
+    if (storedIsBlocked && storedBlockedMe) {
+      setIsBlocked(storedIsBlocked === "true");
+      setBlockedMe(storedBlockedMe === "true");
+    }
+
+    fetch(`http://localhost:8080/users/${userId}/is-blocked`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data && typeof data.isBlockedByCurrentUser !== 'undefined' && typeof data.isBlockedByProfileUser !== 'undefined') {
+          setIsBlocked(data.isBlockedByCurrentUser);
+          setBlockedMe(data.isBlockedByProfileUser);
+
+          localStorage.setItem(`isBlocked_${userId}`, data.isBlockedByCurrentUser.toString());
+          localStorage.setItem(`blockedMe_${userId}`, data.isBlockedByProfileUser.toString());
+        } else {
+          console.error("Block status data is invalid:", data);
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to fetch block status:", error);
+      });
+  }, [userId, token]);
+
   useEffect(() => {
     if (!userId) return;
 
@@ -25,8 +57,8 @@ export default function Profile() {
         if (data) {
           setProfileData({
             username: data.username,
-            banner: data.banner,
-            avatar: data.avatar,
+            banner: `http://localhost:8080${data.banner}`,
+            avatar: `http://localhost:8080${data.avatar}`,
             location: data.location,
             bio: data.bio,
             website: data.website,
@@ -38,17 +70,30 @@ export default function Profile() {
       });
   }, [userId]);
 
-  // Fetch posts only if the user is NOT blocked
   useEffect(() => {
-    if (!userId || !profileData) return;
+    if (!userId || !token || !profileData) return;
 
-    if (profileData.is_blocked) {
+    fetch(`http://localhost:8080/users/isFollowing/${userId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        setIsFollowing(data.is_following);
+      });
+  }, [userId, token, profileData]);
+
+  useEffect(() => {
+    if (isBlocked || blockedMe) {
       setPosts([]);
       return;
     }
 
+    if (!userId || !profileData || !token) return;
+
     setLoading(true);
-    fetch(`http://localhost:8080/posts/user/${userId}`)
+    fetch(`http://localhost:8080/posts/user/${userId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
       .then((response) => response.json())
       .then((data) => {
         setPosts(data.posts || []);
@@ -56,9 +101,8 @@ export default function Profile() {
       .finally(() => {
         setLoading(false);
       });
-  }, [userId, profileData]);
+  }, [userId, profileData, token, isBlocked, blockedMe]);
 
-  // Follow/unfollow logic
   function handleFollowToggle() {
     if (!token) return;
 
@@ -77,18 +121,44 @@ export default function Profile() {
     });
   }
 
-  // Check follow status
-  useEffect(() => {
-    if (!userId || !token) return;
-
-    fetch(`http://localhost:8080/users/isFollowing/${userId}`, {
-      headers: { Authorization: `Bearer ${token}` },
+  function handleBlockToggle() {
+    if (!token) return;
+  
+    fetch(`http://localhost:8080/users/${userId}/block`, {
+      method: isBlocked ? "DELETE" : "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
     })
-      .then((response) => response.json())
-      .then((data) => {
-        setIsFollowing(data.is_following);
+      .then((response) => {
+        if (response.ok) {
+          const newBlockStatus = !isBlocked;
+          setIsBlocked(newBlockStatus); 
+          setBlockedMe(newBlockStatus);
+  
+          localStorage.setItem(`isBlocked_${userId}`, newBlockStatus.toString());
+          localStorage.setItem(`blockedMe_${userId}`, newBlockStatus.toString());
+  
+          console.log("Block status updated:", { isBlocked: newBlockStatus, blockedMe: newBlockStatus });
+  
+          if (newBlockStatus) {
+            setIsFollowing(false);
+            fetch(`http://localhost:8080/users/${userId}/unfollow`, {
+              method: "DELETE",
+              headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+            });
+          }
+        } else {
+          console.error("Failed to toggle block status:", response.status);
+          alert("Something went wrong. Please try again later.");
+        }
+      })
+      .catch((error) => {
+        console.error("Network error:", error);
+        alert("An error occurred. Please check your connection.");
       });
-  }, [userId, token]);
+  }
 
   if (!profileData) return <p>Loading...</p>;
 
@@ -96,43 +166,50 @@ export default function Profile() {
     <div className="flex flex-col gap-2 items-center">
       <NavigationBar />
 
-      {profileData.is_blocked ? (
-        <div className="p-5 text-xl text-red-500">
-          This user has been blocked for violation of terms of service.
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center gap-5 w-full md:max-w-2/3 p-5">
-          <ProfileHead
-            username={profileData.username}
-            banner={profileData.banner}
-            avatar={profileData.avatar}
-            location={profileData.location}
-            bio={profileData.bio}
-            website={profileData.website}
-            isFollowing={isFollowing}
-            followerCount={profileData.followerCount}
-            followingCount={profileData.followingCount}
-            onFollowToggle={handleFollowToggle}
-            isCurrentUser={String(userId) === String(connectedUserId)}
-          />
-          {/* Only show posts if the user is NOT blocked */}
-          {profileData.is_blocked ? (
-            <p>This user has been blocked and their posts are hidden.</p>
-          ) : (
-            <>
-              {posts.length > 0 ? (
-                posts.map((post) => (
-                  <Post key={post.id} {...post} />
-                ))
-              ) : loading ? (
-                <p>Loading posts...</p>
-              ) : (
-                <p>No posts available.</p>
-              )}
-            </>
-          )}
-        </div>
-      )}
+      <div className="flex flex-col items-center justify-center gap-5 w-full md:max-w-2/3 p-5">
+        <ProfileHead
+          username={profileData.username}
+          banner={profileData.banner}
+          avatar={profileData.avatar}
+          location={profileData.location}
+          bio={profileData.bio}
+          website={profileData.website}
+          followerCount={profileData.followerCount}
+          followingCount={profileData.followingCount}
+          isFollowing={isFollowing}
+          onFollowToggle={handleFollowToggle}
+          isCurrentUser={String(userId) === String(connectedUserId)}
+          isBlocked={isBlocked}
+          onBlockToggle={handleBlockToggle}
+          blockedMe={blockedMe}
+        />
+        
+        {blockedMe ? (
+          <div className="flex flex-col items-center">
+            <p>This user has blocked you. You cannot see their posts or follow them.</p>
+          </div>
+        ) : (
+          <>
+            {posts.length === 0 ? (
+              <p>No posts to show</p>
+            ) : (
+              posts.map((post: PostData, index) => (
+                <Post
+                  key={`${post.id}-${index}`}
+                  id={post.id}
+                  user_id={post.user_id}
+                  avatar={post.avatar}
+                  username={post.username}
+                  content={post.content}
+                  created_at={post.created_at}
+                  file_paths={post.file_paths}
+                />
+              ))
+            )}
+            {loading && <p>Loading more posts...</p>}
+          </>
+        )}
+      </div>
     </div>
   );
 }

@@ -1,8 +1,9 @@
 import { TextAreaProps } from "../interfaces/dataDefinitions";
 
-export default function TextArea({ placeholder, value, onChange, rows }: TextAreaProps) {
+export default function TextArea({ name, placeholder, value, onChange, rows }: TextAreaProps) {
     return (
         <textarea
+            name={name}
             placeholder={placeholder}
             value={value}
             onChange={onChange}

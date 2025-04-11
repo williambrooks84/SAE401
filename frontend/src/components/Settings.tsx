@@ -1,13 +1,13 @@
 import { CrossIcon } from "../assets/icons";
 import FormLabel from "../ui/FormLabel";
 import { useState, useEffect } from "react";
-
-interface ProfileLoginProps {
-    isVisible: boolean;
-    onClose: () => void;
-}
+import { useAuth } from "../context/AuthContext";
+import { ProfileLoginProps } from "../interfaces/dataDefinitions";
 
 export default function Settings({ isVisible, onClose }: ProfileLoginProps) {
+    const {user} = useAuth();
+    const userId = user?.userId;
+
     const [autoRefresh, setAutoRefresh] = useState(false);
     const [refreshInterval, setRefreshInterval] = useState(30);
 
@@ -23,7 +23,6 @@ export default function Settings({ isVisible, onClose }: ProfileLoginProps) {
         }
     }, []);
 
-    // Sauvegarder les paramètres dès qu'ils changent
     useEffect(() => {
         localStorage.setItem("autoRefresh", autoRefresh.toString());
         localStorage.setItem("refreshInterval", refreshInterval.toString());
@@ -65,7 +64,10 @@ export default function Settings({ isVisible, onClose }: ProfileLoginProps) {
             </select>
             </div>
             <div className="my-4 border-t border-black"></div>
-            <a href="/dashboard" className="text-center text-lg font-bold">Administrator Dashboard</a>
+            <div className="flex flex-col items-start">
+                <a href="/dashboard" className="text-lg font-bold">Administrator Dashboard</a>
+                <a href={`/blocklist/${userId}`} className="text-lg font-bold">Blocked users</a>
+            </div>
         </div>
     )
 }

@@ -5,7 +5,8 @@ import DashboardList from "../ui/DashboardList";
 import FormLabel from "../ui/FormLabel";
 import FormBox from "../ui/FormBox";
 import Button from "../ui/Button";
-import { useAuth } from "../context/AuthContext"; // Import useAuth
+import { useAuth } from "../context/AuthContext";
+import PostList from "../ui/PostList";
 
 export default function Dashboard() {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -85,7 +86,7 @@ export default function Dashboard() {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`, // Add Authorization header
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           id: selectedUserId,
@@ -94,7 +95,7 @@ export default function Dashboard() {
         }),
       })
       .then(async (response) => {
-        const data = await response.json(); // Convert response to JSON
+        const data = await response.json();
         
         if (!response.ok) {
           throw new Error(data.error || (data.errors ? data.errors.join(', ') : 'Update failed'));
@@ -103,16 +104,16 @@ export default function Dashboard() {
       })
       .then(() => {
         alert('User updated successfully!');
-        window.location.reload(); // Reload page
+        window.location.reload();
       })
       .catch((error) => {
-        alert(`Error: ${error.message}`); // Display error messages
+        alert(`Error: ${error.message}`);
       });
     }
   };
 
   if (!isAdmin) {
-    return null; // Render nothing while checking admin status
+    return null;
   }
 
   return (
@@ -180,8 +181,11 @@ export default function Dashboard() {
           >
             Block user
           </Button>
-
-          <Button
+            <div className="flex flex-col gap-2">
+              <FormLabel size="extralarge" label="Manage the posts:" />
+              <PostList />
+            </div>   
+            <Button
             variant="greybgless"
             size="bgless"
             rounded="none"
@@ -189,7 +193,7 @@ export default function Dashboard() {
             onClick={() => navigate("/")}
           >
             Finished? Go back to the home
-          </Button>    
+          </Button> 
         </div>
       </div>
     </div>

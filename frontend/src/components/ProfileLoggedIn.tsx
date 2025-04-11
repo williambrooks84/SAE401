@@ -1,25 +1,23 @@
 import Button from "../ui/Button";
 import { useNavigate } from "react-router-dom";
 import { ProfileButtonIcon } from "../assets/icons";
-import { useAuth } from "../context/AuthContext"; // Use AuthContext
+import { useAuth } from "../context/AuthContext"; 
 
 export default function ProfileLoggedIn() {
   const navigate = useNavigate();
-  const { user, logout } = useAuth(); // Destructure user and logout from AuthContext
+  const { user, logout } = useAuth();
 
-  // Use user data directly from context
-  const username = user?.username;  // Directly access the username from context
-  const userId = user?.userId;  // Directly access the userId from context
+  const username = user?.username;
+  const userId = user?.userId;
 
   const handleLogout = () => {
-    logout(); // Call logout from context to handle logout
-    navigate("/login");  // Navigate to the login page after logout
+    logout(); 
+    navigate("/login"); 
   };
 
   return (
     <div className="flex flex-col items-center gap-7">
-      {/* Display username */}
-      <p className="text-center text-lg font-bold">Welcome, {username || 'User'}!</p>  {/* Show username or 'User' if not available */}
+      <p className="text-center text-lg font-bold">Welcome, {username || 'User'}!</p> 
       {userId && (
         <Button
           variant="nobg"
@@ -27,7 +25,7 @@ export default function ProfileLoggedIn() {
           rounded="default"
           width="fit"
           padding="default"
-          onClick={() => navigate(`/profile/${userId}`)} // Navigate to the user's profile
+          onClick={() => navigate(`/profile/${userId}`)} 
           className="flex flex-row items-center gap-2"
         >
           <ProfileButtonIcon className="w-4 h-4" />
@@ -41,7 +39,7 @@ export default function ProfileLoggedIn() {
         rounded="default"
         width="fit"
         padding="default"
-        onClick={() => navigate("/foryou")} // Navigate to the followed page
+        onClick={() => navigate("/foryou")}
       >
         For you
       </Button>
@@ -52,7 +50,7 @@ export default function ProfileLoggedIn() {
         rounded="default"
         width="fit"
         padding="default"
-        onClick={handleLogout} // Logout when clicked
+        onClick={handleLogout} 
       >
         Logout
       </Button>

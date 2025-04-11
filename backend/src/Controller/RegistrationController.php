@@ -35,7 +35,6 @@ class RegistrationController extends AbstractController
     ): JsonResponse {
         $data = json_decode($request->getContent(), true);
 
-        // Check if email or username already exists
         $existingUser = $userRepository->findOneBy(['email' => $data['email']]);
         if ($existingUser) {
             return new JsonResponse(['error' => 'Email is already in use.'], 400);
@@ -46,7 +45,6 @@ class RegistrationController extends AbstractController
             return new JsonResponse(['error' => 'Username is already taken.'], 400);
         }
 
-        // Create and hash the user password
         $user = new User();
         $user ->setRoles(["ROLE_USER"]);
         $user->setUsername($data['username']);
@@ -55,7 +53,6 @@ class RegistrationController extends AbstractController
             $passwordHasher->hashPassword($user, $data['password'])
         );
 
-        // Validate the user entity using Symfony's Validator
         $errors = $validator->validate($user);
         if (count($errors) > 0) {
             $errorMessages = [];
@@ -65,11 +62,9 @@ class RegistrationController extends AbstractController
             return new JsonResponse(['errors' => $errorMessages], 400);
         }
 
-        // Persist the user entity to the database
         $entityManager->persist($user);
         $entityManager->flush();
 
-        // Generate a signed URL and email it to the user
         $this->emailVerifier->sendEmailConfirmation('app_verify_email', $user,
             (new TemplatedEmail())
                 ->from(new Address('test@sae.com', 'Test SAE'))
@@ -78,7 +73,6 @@ class RegistrationController extends AbstractController
                 ->htmlTemplate('registration/confirmation_email.html.twig')
         );
 
-        // Return a success response
         return new JsonResponse(['message' => 'User registered successfully. Please verify your email.'], 201);
     }
 
@@ -88,28 +82,25 @@ class RegistrationController extends AbstractController
         $id = $request->query->get('id');
     
         if (null === $id) {
-            return $this->redirectToRoute('app_register'); // Redirect to registration if no id
+            return $this->redirectToRoute('app_register'); 
         }
     
         $user = $userRepository->find($id);
     
         if (null === $user) {
-            return $this->redirectToRoute('app_register'); // Redirect to registration if user not found
+            return $this->redirectToRoute('app_register'); 
         }
     
-        // validate email confirmation link, sets User::isVerified=true and persists
         try {
             $this->emailVerifier->handleEmailConfirmation($request, $user);
         } catch (VerifyEmailExceptionInterface $exception) {
             $this->addFlash('verify_email_error', $exception->getReason());
     
-            return $this->redirectToRoute('app_register'); // Redirect to registration if verification fails
+            return $this->redirectToRoute('app_register');
         }
     
-        // Set a flash message after successful verification
         $this->addFlash('success', 'Your email address has been verified.');
     
-        // Redirect the user to the login page (the api_login route)
         return $this->redirect('http://localhost:8090/login');
     }
 }
