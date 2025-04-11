@@ -12,7 +12,7 @@ export default function Login() {
     const [emailError, setEmailError] = useState('');
     const [passwordError, setPasswordError] = useState('');
 
-    const { login } = useAuth(); // Get login function from context
+    const { login } = useAuth();
     const navigate = useNavigate();
 
     const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -49,17 +49,13 @@ export default function Login() {
                 return response.json();
             })
             .then((data) => {
-                // Check if user has the "ROLE_USER_BLOCKED"
                 const userRoles = data.user.roles || [];
                 if (userRoles.includes("ROLE_USER_BLOCKED")) {
                     setEmailError('Your account has been blocked due to violation of the terms of service. Please contact support.');
-                    navigate("/contact-support"); // Redirect to a support/contact page for blocked users
-                    return; // Stop further execution
+                    navigate("/contact-support"); 
+                    return; 
                 }
-    
-                login(data.token, data.user); // Store token and user in Auth Context
-    
-                // Redirect to home page
+                login(data.token, data.user); 
                 navigate('/');
             })
             .catch((error) => {

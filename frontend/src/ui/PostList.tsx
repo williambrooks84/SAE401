@@ -51,7 +51,6 @@ export default function PostList() {
             })
             .then(() => {
                 alert("Post censored successfully!");
-                // Optionally, update the posts state to reflect the censored post
                 setPosts((prevPosts) =>
                     prevPosts.map((post) =>
                         post.id === selectedPostId ? { ...post, content: "[CENSORED]" } : post

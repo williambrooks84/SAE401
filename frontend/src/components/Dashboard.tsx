@@ -86,7 +86,7 @@ export default function Dashboard() {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`, // Add Authorization header
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           id: selectedUserId,
@@ -95,7 +95,7 @@ export default function Dashboard() {
         }),
       })
       .then(async (response) => {
-        const data = await response.json(); // Convert response to JSON
+        const data = await response.json();
         
         if (!response.ok) {
           throw new Error(data.error || (data.errors ? data.errors.join(', ') : 'Update failed'));
@@ -104,16 +104,16 @@ export default function Dashboard() {
       })
       .then(() => {
         alert('User updated successfully!');
-        window.location.reload(); // Reload page
+        window.location.reload();
       })
       .catch((error) => {
-        alert(`Error: ${error.message}`); // Display error messages
+        alert(`Error: ${error.message}`);
       });
     }
   };
 
   if (!isAdmin) {
-    return null; // Render nothing while checking admin status
+    return null;
   }
 
   return (

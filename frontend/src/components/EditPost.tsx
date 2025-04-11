@@ -10,7 +10,7 @@ import { compressImage } from "../utils/compressImage";
 
 export default function EditPost() {
     const { token } = useAuth();
-    const { id } = useParams(); // Get post ID from the URL
+    const { id } = useParams(); 
     const navigate = useNavigate();
 
     const [post, setPost] = useState('');
@@ -19,15 +19,13 @@ export default function EditPost() {
     const [loading, setLoading] = useState(false);
     const [files, setFiles] = useState<File[]>([]);
     const [filePreviews, setFilePreviews] = useState<string[]>([]);
-    const [existingFiles, setExistingFiles] = useState<string[]>([]); // For existing files in edit mode
-    const [filesToDelete, setFilesToDelete] = useState<string[]>([]); // Files to delete in edit mode
+    const [existingFiles, setExistingFiles] = useState<string[]>([]); 
+    const [filesToDelete, setFilesToDelete] = useState<string[]>([]);
 
-    // Redirect to login if no token
     useEffect(() => {
         if (!token) navigate("/login");
     }, [token, navigate]);
 
-    // Fetch post data if editing
     useEffect(() => {
         if (!id || !token) return;
     
@@ -46,21 +44,20 @@ export default function EditPost() {
             })
             .then((data) => {
                 if (data.error) {
-                    console.error("Error from server:", data.error); // log the error from the server
+                    console.error("Error from server:", data.error); 
                     setPostError(data.error);
                 } else {
-                    console.log("Fetched post data:", data); // Log the fetched post data
-                    setPost(data.content); // Directly use `data.content` instead of `data.post.content`
-                    setExistingFiles(data.file_paths || []); // Set the existing file paths, handle case when file_paths is not present
+                    console.log("Fetched post data:", data);
+                    setPost(data.content);
+                    setExistingFiles(data.file_paths || []); 
                 }
             })
             .catch((error) => {
-                console.error("Error while fetching post data:", error); // Log any other errors (network issues)
+                console.error("Error while fetching post data:", error); 
                 setPostError("Error fetching post data.");
             });
     }, [id, token]);
 
-    // Handle text changes
     const handlePostChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         const value = e.target.value;
         if (value.length > 280) {
@@ -71,14 +68,12 @@ export default function EditPost() {
         setPost(value);
     };
 
-    // Handle file changes
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const selectedFiles = e.target.files;
         if (selectedFiles) {
             const compressedFiles: File[] = [];
             const previews: string[] = [];
     
-            // Compress and create file previews
             for (const file of Array.from(selectedFiles)) {
                 try {
                     const compressedFile = await compressImage(file, 1, 500);
@@ -97,13 +92,10 @@ export default function EditPost() {
                 }
             }
     
-            // Log the files to check if they're being set correctly
-            console.log("Selected files:", compressedFiles); // Add this log
             setFiles((prev) => [...prev, ...compressedFiles]);
         }
     };
 
-    // Handle removing files
     const handleRemoveFile = (fileIndex: number, isExistingFile: boolean) => {
         if (isExistingFile) {
             const filePathToDelete = existingFiles[fileIndex];
@@ -116,7 +108,6 @@ export default function EditPost() {
     };
 
     const handleSubmit = async () => {
-        // Basic validation for content or files
         if (!post.trim() && files.length === 0) {
             setPostError("The post must contain either text or at least one file.");
             return;
@@ -127,15 +118,13 @@ export default function EditPost() {
         setPostError('');
     
         const formData = new FormData();
-        formData.append("content", post); // Append content to the form data
+        formData.append("content", post);
     
-        // Add files to the formData
         files.forEach((file) => {
             console.log("Appending file:", file);
             formData.append("files[]", file);
         });
     
-        // Handle files to delete
         if (filesToDelete.length > 0) {
             console.log("Files to delete:", filesToDelete);
             formData.append("delete_files", JSON.stringify(filesToDelete));
@@ -158,24 +147,20 @@ export default function EditPost() {
             } else {
                 setSuccessMessage(id ? "Post updated successfully!" : "Post created successfully!");
     
-                // Update file paths (ensure files are reflected properly)
-                setExistingFiles(data.post.file_paths || []); // Add or update file paths
+                setExistingFiles(data.post.file_paths || []); 
     
-                // Clear files and previews after successful submission
                 setFiles([]);
                 setFilePreviews([]);
     
-                // Redirect to home after a successful submission (after the success message)
                 setTimeout(() => {
-                    navigate(`/`); // Navigate to home page
-                }, 2000); // Wait for success message to display
+                    navigate(`/`); 
+                }, 2000); 
             }
         } catch (error) {
             console.error("Error:", error);
             setPostError("Error saving post.");
         }
-    
-        // Always stop the loading state after request
+
         setLoading(false);
     };
     

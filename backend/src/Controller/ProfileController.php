@@ -35,7 +35,6 @@ class ProfileController extends AbstractController
             return new JsonResponse(['error' => 'User not authenticated.'], 401);
         }
 
-        // Log user details before the update
         $this->logger->info('User before update:', [
             'username' => $user->getUsername(),
             'location' => $user->getLocation(),
@@ -45,7 +44,6 @@ class ProfileController extends AbstractController
             'banner' => $user->getBanner(),
         ]);
 
-        // Grab request data (form-data or JSON)
         try {
             $data = array_merge(
                 $request->query->all(),
@@ -55,9 +53,6 @@ class ProfileController extends AbstractController
             return new JsonResponse(['error' => 'Invalid JSON in request body.'], 400);
         }
         
-        //dd($data);
-        
-        // Manually use the setters for the fields
         if (isset($data['username'])) {
             $user->setUsername($data['username']);
         }
@@ -71,7 +66,6 @@ class ProfileController extends AbstractController
             $user->setWebsite($data['website']);
         }
 
-        // Handle file uploads (avatar and banner)
         $uploads = [
             'avatar' => 'assets/avatars/',
             'banner' => 'assets/banners/',
@@ -93,14 +87,12 @@ class ProfileController extends AbstractController
             }
         }
 
-        // Validate updated user
         $errors = $validator->validate($user);
         if (count($errors) > 0) {
             $errorMessages = array_map(fn($error) => $error->getMessage(), iterator_to_array($errors));
             return new JsonResponse(['errors' => $errorMessages], 400);
         }
 
-        // Ensure Doctrine is managing the user entity
         if (!$this->em->contains($user)) {
             $this->logger->warning('User entity is not managed by Doctrine! Merging entity.');
             $user = $this->em->getRepository(User::class)->find($user->getId());
@@ -109,7 +101,6 @@ class ProfileController extends AbstractController
             }
         }
 
-        // Log entity status before persistence
         $this->logger->info('Persisting user data:', [
             'username' => $user->getUsername(),
             'location' => $user->getLocation(),
@@ -119,10 +110,8 @@ class ProfileController extends AbstractController
             'banner' => $user->getBanner(),
         ]);
 
-        // Persist changes
         $this->em->flush();
 
-        // Log user details after flush to confirm save
         $this->logger->info('User after flush:', [
             'username' => $user->getUsername(),
             'location' => $user->getLocation(),

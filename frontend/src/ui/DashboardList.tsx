@@ -22,7 +22,7 @@ export default function DashboardList({ onSelectUser }: DashboardListProps) {
     const handleUserChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const userId = e.target.value;
         setSelectedUserId(userId);
-        onSelectUser(userId); // Pass the selected user ID to the parent component
+        onSelectUser(userId);
     };
 
     return (

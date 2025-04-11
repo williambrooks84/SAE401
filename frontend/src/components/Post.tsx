@@ -17,7 +17,6 @@ export default function Post({ id, avatar, username, content, created_at, user_i
   const [commentCount, setCommentCount] = useState<number>(0);
   const [showComments, setShowComments] = useState<boolean>(false);
 
-  // Fetch like status (visible even when not logged in)
   useEffect(() => {
     const fetchLikeCount = async () => {
       try {
@@ -30,9 +29,9 @@ export default function Post({ id, avatar, username, content, created_at, user_i
         }
         const data = await response.json();
         if (data) {
-          setLikeCount(data.like_count || 0); // Set like count
+          setLikeCount(data.like_count || 0);
           if (token) {
-            setLiked(data.liked); // Only update liked if user is authenticated
+            setLiked(data.liked); 
           }
         }
       } catch (err) {
@@ -41,7 +40,7 @@ export default function Post({ id, avatar, username, content, created_at, user_i
     };
 
     fetchLikeCount();
-    updateCommentCount(); // Fetch comment count always
+    updateCommentCount(); 
   }, [id, token]);
 
   const handleLike = (newLiked: boolean) => {

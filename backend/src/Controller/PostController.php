@@ -90,10 +90,8 @@ class PostController extends AbstractController
                     return new JsonResponse(['error' => 'Only JPG, PNG images and MP4 videos are allowed'], 400);
                 }
 
-                // Create a unique file name
                 $fileName = uniqid('post_') . '.' . $file->guessExtension();
 
-                // Move the file to the server's public directory
                 try {
                     $file->move($this->getParameter('kernel.project_dir') . '/public/assets/posts/', $fileName);
                     $filePaths[] = '/assets/posts/' . $fileName;
@@ -103,20 +101,18 @@ class PostController extends AbstractController
             }
         }
 
-        // Create a new post entity
         $post = new Post();
         $post->setContent($content);
         $post->setCreatedAt(new \DateTime());
         $post->setUser($user);
-        $post->setFilePaths($filePaths); // Store file paths in the post entity
+        $post->setFilePaths($filePaths); 
 
-        // Persist the post entity to the database
         $entityManager->persist($post);
         $entityManager->flush();
 
         return new JsonResponse([
             'message' => 'Post created successfully',
-            'file_paths' => $filePaths, // Return the file paths for confirmation
+            'file_paths' => $filePaths,
         ], 201);
     }
 
@@ -231,20 +227,16 @@ class PostController extends AbstractController
             return new JsonResponse(['error' => 'Post not found'], 404);
         }
 
-        // Get the like count, no authentication required for this
         $likeCount = count($post->getLikes());
 
-        // Check if the user is authenticated to determine if they liked the post
         $user = $this->getUser();
         if (!$user instanceof User) {
-            // If user is not authenticated, return the like count only
             return new JsonResponse([
                 'like_count' => $likeCount,
-                'liked' => false, // As the user is not logged in, they have not liked the post
+                'liked' => false,
             ]);
         }
 
-        // If the user is authenticated, check if they liked the post
         $userLiked = $post->getLikes()->filter(function ($like) use ($user) {
             return $like->getUser() === $user;
         })->isEmpty() ? false : true;
@@ -271,7 +263,6 @@ class PostController extends AbstractController
 
         $posts = $postRepository->findByUsers($followedUserIds);
 
-        // Sort posts by newest first
         usort($posts, function ($a, $b) {
             return $b->getCreatedAt() <=> $a->getCreatedAt();
         });
@@ -299,7 +290,7 @@ class PostController extends AbstractController
     #[Route('/posts/{id}', name: 'posts.fetch', methods: ['GET'])]
     public function GetPostById(PostRepository $postRepository, int $id): JsonResponse
     {
-        $post = $postRepository->find($id);  // Correct method to find by ID
+        $post = $postRepository->find($id);
 
         if (!$post) {
             return $this->json(['error' => 'Post not found'], JsonResponse::HTTP_NOT_FOUND);
@@ -336,8 +327,6 @@ class PostController extends AbstractController
         if ($post->getUser() !== $user) {
             return new JsonResponse(['error' => 'You are not authorized to edit this post'], JsonResponse::HTTP_FORBIDDEN);
         }
-
-        // Check Content-Type
         if ($request->headers->get('Content-Type') === 'application/json') {
             $data = json_decode($request->getContent(), true);
             $content = $data['content'] ?? $post->getContent();
@@ -345,23 +334,18 @@ class PostController extends AbstractController
             $content = $request->request->get('content') ?? $post->getContent();
         }
 
-        // Check if content is really changed
         if ($content !== $post->getContent()) {
             $post->setContent($content);
         }
 
-        // Handle file deletions and uploads as needed (if relevant)
         $filePaths = $post->getFilePaths();
 
-        // Update the post entity
         $post->setContent($content);
         $post->setFilePaths($filePaths);
 
-        // Persist and flush
         $entityManager->persist($post);
         $entityManager->flush();
 
-        // Refresh the entity to ensure changes are reflected
         $entityManager->refresh($post);
 
         return new JsonResponse([

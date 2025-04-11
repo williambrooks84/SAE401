@@ -12,17 +12,13 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
-use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use App\Repository\TokenRepository;
 use App\Repository\UserBlockRepository;
-use Intervention\Image\ImageManagerStatic as Image;
-use App\Service\FileUploader; // Ensure this service exists in the specified namespace
 
 class UserController extends AbstractController
 {
     private $entityManager;
 
-    // Constructor to inject the EntityManager
     public function __construct(EntityManagerInterface $entityManager)
     {
         $this->entityManager = $entityManager;
@@ -50,31 +46,26 @@ class UserController extends AbstractController
     #[Route('/token', name: 'user.token', methods: ['GET'])]
     public function getUserByToken(Request $request, TokenRepository $tokenRepository): JsonResponse
     {
-        // Get the token from the Authorization header (it should be in the form of "Bearer <token>")
         $authorizationHeader = $request->headers->get('Authorization');
 
         if (!$authorizationHeader) {
             return new JsonResponse(['error' => 'Authorization header not found'], 400);
         }
 
-        // Extract the token from the "Bearer <token>" string
         $token = str_replace('Bearer ', '', $authorizationHeader);
 
-        // Look for the token in the database
         $storedToken = $tokenRepository->findOneBy(['value' => $token]);
 
         if (!$storedToken) {
             return new JsonResponse(['error' => 'Invalid token'], 401);
         }
 
-        // Get the user associated with the token
-        $user = $storedToken->getUser(); // Use getUser() instead of getUserId()
+        $user = $storedToken->getUser();
 
         if (!$user) {
             return new JsonResponse(['error' => 'User not found'], 404);
         }
 
-        // Return the user data (including username, email, etc.)
         return new JsonResponse([
             'user_id' => $user->getId(),
             'role' => $user->getRoles(),
@@ -96,35 +87,30 @@ class UserController extends AbstractController
         ValidatorInterface $validator,
         UserRepository $userRepository
     ): JsonResponse {
-        // Decode the JSON request content
+
         $data = json_decode($request->getContent(), true);
 
-        // Check if required fields (username, email, and ID) are present in the request
         if (!isset($data['username']) || !isset($data['email']) || !isset($data['id'])) {
             return new JsonResponse(['error' => 'Username, email, and ID are required.'], 400);
         }
 
-        // Ensure user is authenticated and has role 'ROLE_ADMIN'
-        $user = $this->getUser(); // Retrieve the authenticated user
+        $user = $this->getUser(); 
 
         if (!$user) {
-            return new JsonResponse(['error' => 'User not authenticated.'], 401);  // Unauthorized
+            return new JsonResponse(['error' => 'User not authenticated.'], 401);  
         }
 
-        // Log the user roles for debugging purposes
         error_log('User Roles: ' . implode(', ', $user->getRoles()));
 
         if (!in_array('ROLE_ADMIN', $user->getRoles())) {
             return new JsonResponse(['error' => 'Access denied. Admins only.'], 403);
         }
 
-        // Find the user by ID
         $userToUpdate = $userRepository->find($data['id']);
         if (!$userToUpdate) {
             return new JsonResponse(['error' => 'User not found.'], 404);
         }
 
-        // Check if the new username or email already exists in the database
         $existingUserByUsername = $userRepository->findOneBy(['username' => $data['username']]);
         if ($existingUserByUsername && $existingUserByUsername->getId() !== $userToUpdate->getId()) {
             return new JsonResponse(['error' => 'Username is already taken.'], 400);
@@ -135,11 +121,9 @@ class UserController extends AbstractController
             return new JsonResponse(['error' => 'Email is already taken.'], 400);
         }
 
-        // Update the user details (username and email)
         $userToUpdate->setUsername($data['username']);
         $userToUpdate->setEmail($data['email']);
 
-        // Validate the updated user entity
         $errors = $validator->validate($userToUpdate);
         if (count($errors) > 0) {
             $errorMessages = [];
@@ -149,36 +133,29 @@ class UserController extends AbstractController
             return new JsonResponse(['errors' => $errorMessages], 400);
         }
 
-        // Persist the changes to the database
         $entityManager->flush();
 
-        // Return success response
         return new JsonResponse(['message' => 'User updated successfully.'], 200);
     }
 
     #[Route('/logout', name: 'user.logout', methods: ['DELETE'])]
     public function logout(Request $request, TokenRepository $tokenRepository, EntityManagerInterface $entityManager): JsonResponse
     {
-        // Get the token from the Authorization header
         $authorizationHeader = $request->headers->get('Authorization');
         if (!$authorizationHeader) {
             return new JsonResponse(['error' => 'Authorization header not found'], 400);
         }
 
-        // Extract the token from the "Bearer <token>" string
         $token = str_replace('Bearer ', '', $authorizationHeader);
 
-        // Find the token in the database
         $storedToken = $tokenRepository->findOneBy(['value' => $token]);
         if (!$storedToken) {
             return new JsonResponse(['error' => 'Invalid token'], 401);
         }
 
-        // Remove the token from the database
         $entityManager->remove($storedToken);
         $entityManager->flush();
 
-        // Return success response
         return new JsonResponse(['message' => 'Logged out successfully.'], 200);
     }
 
@@ -191,10 +168,8 @@ class UserController extends AbstractController
             return new JsonResponse(['error' => 'User not found'], 404);
         }
 
-        // Get follower count
         $followerCount = count($entityManager->getRepository(Follow::class)->findBy(['followed' => $user]));
 
-        // Get following count
         $followingCount = count($entityManager->getRepository(Follow::class)->findBy(['follower' => $user]));
 
         return new JsonResponse([
@@ -219,13 +194,12 @@ class UserController extends AbstractController
             return new JsonResponse(['error' => 'User not found'], 404);
         }
 
-        $currentUser = $this->getUser(); // Assuming user is authenticated and can be retrieved this way
+        $currentUser = $this->getUser(); 
 
         if ($currentUser === $userToFollow) {
             return new JsonResponse(['error' => 'You cannot follow yourself'], 400);
         }
 
-        // Check if the current user is already following the target user
         $existingFollow = $entityManager->getRepository(Follow::class)->findOneBy([
             'follower' => $currentUser,
             'followed' => $userToFollow,
@@ -235,7 +209,6 @@ class UserController extends AbstractController
             return new JsonResponse(['error' => 'You are already following this user'], 400);
         }
 
-        // Create a new follow relationship
         $follow = new Follow();
         $follow->setFollower($currentUser);
         $follow->setFollowed($userToFollow);
@@ -255,9 +228,8 @@ class UserController extends AbstractController
             return new JsonResponse(['error' => 'User not found'], 404);
         }
 
-        $currentUser = $this->getUser(); // Assuming user is authenticated and can be retrieved this way
+        $currentUser = $this->getUser(); 
 
-        // Check if the current user is following the target user
         $existingFollow = $entityManager->getRepository(Follow::class)->findOneBy([
             'follower' => $currentUser,
             'followed' => $userToUnfollow,
@@ -267,7 +239,6 @@ class UserController extends AbstractController
             return new JsonResponse(['error' => 'You are not following this user'], 400);
         }
 
-        // Remove the follow relationship
         $entityManager->remove($existingFollow);
         $entityManager->flush();
 
@@ -287,7 +258,7 @@ class UserController extends AbstractController
 
         $followerData = [];
         foreach ($followers as $follow) {
-            $follower = $follow->getFollower(); // Assuming Follow entity has a getFollower() method
+            $follower = $follow->getFollower();
             $followerData[] = [
                 'id' => $follower->getId(),
                 'username' => $follower->getUsername(),
@@ -331,9 +302,8 @@ class UserController extends AbstractController
             return new JsonResponse(['error' => 'User not found'], 404);
         }
 
-        $currentUser = $this->getUser(); // Assuming user is authenticated and can be retrieved this way
+        $currentUser = $this->getUser();
 
-        // Check if the current user is following the target user
         $existingFollow = $entityManager->getRepository(Follow::class)->findOneBy([
             'follower' => $currentUser,
             'followed' => $userToCheck,
@@ -361,7 +331,7 @@ class UserController extends AbstractController
             return new JsonResponse(['error' => 'User is already blocked.'], 400);
         }
 
-        $roles[] = 'ROLE_USER_BLOCKED'; // Ajouter le rôle bloqué
+        $roles[] = 'ROLE_USER_BLOCKED'; 
         $userToBlock->setRoles(array_unique($roles));
 
         $entityManager->flush();
@@ -404,30 +374,23 @@ class UserController extends AbstractController
         $entityManager->persist($block);
         $entityManager->flush();
 
-        // Unfollow both users automatically
         $this->unfollow($currentUser, $userToBlock, $entityManager);
-
-        // Optionally log block event for debugging
-        // $this->get('logger')->info("User {$currentUser->getUsername()} blocked user {$userToBlock->getUsername()}");
 
         return new JsonResponse(['message' => 'User blocked successfully'], 201);
     }
 
     private function unfollow($user1, $user2)
     {
-        // Access the Follow repository via the injected entity manager
         $followingRepo = $this->entityManager->getRepository(\App\Entity\Follow::class);
 
-        // Find the follow relationship between user1 and user2
         $follow = $followingRepo->findOneBy([
             'follower' => $user1,
-            'followed' => $user2 // Using the 'followed' property, not 'following'
+            'followed' => $user2 
         ]);
 
-        // If a follow relationship exists, remove it
         if ($follow) {
             $this->entityManager->remove($follow);
-            $this->entityManager->flush();  // Commit changes to the database
+            $this->entityManager->flush();  
         }
     }
 
@@ -454,12 +417,8 @@ class UserController extends AbstractController
             return new JsonResponse(['error' => 'User is not blocked'], 400);
         }
 
-        // Remove block
         $entityManager->remove($block);
         $entityManager->flush();
-
-        // No automatic re-following when unblocking (unless you decide to add this feature)
-        // If re-follow is needed, add follow logic here
 
         return new JsonResponse(['message' => 'User unblocked successfully'], 200);
     }
@@ -473,19 +432,16 @@ class UserController extends AbstractController
             return new JsonResponse(['error' => 'Not authenticated'], 401);
         }
 
-        // Find the user to check if blocked
         $userToCheck = $userRepository->find($id);
         if (!$userToCheck) {
             return new JsonResponse(['error' => 'User not found'], 404);
         }
 
-        // Check if the current user has blocked the user
         $blockerToBlocked = $entityManager->getRepository(\App\Entity\UserBlock::class)->findOneBy([
             'blocker' => $currentUser,
             'blocked' => $userToCheck,
         ]);
 
-        // Check if the user has blocked the current user
         $blockedToBlocker = $entityManager->getRepository(\App\Entity\UserBlock::class)->findOneBy([
             'blocker' => $userToCheck,
             'blocked' => $currentUser,
@@ -493,7 +449,6 @@ class UserController extends AbstractController
 
         $isBlockedByAdmin = in_array('ROLE_USER_BLOCKED', $userToCheck->getRoles());
 
-        // Return the block status in both directions
         return new JsonResponse([
             'isBlockedByCurrentUser' => $blockerToBlocked !== null,
             'isBlockedByProfileUser' => $blockedToBlocker !== null,
@@ -502,7 +457,7 @@ class UserController extends AbstractController
     }
 
     #[Route('/blocklist/{id}', name: 'users.blocklist', methods: ['GET'])]
-    public function getBlockList(int $id, UserRepository $userRepository, UserBlockRepository $userBlockRepository): JsonResponse
+    public function getBlockList(int $id, UserBlockRepository $userBlockRepository): JsonResponse
     {
         $currentUser = $this->getUser();
 
@@ -510,15 +465,12 @@ class UserController extends AbstractController
             return new JsonResponse(['error' => 'Not authenticated'], 401);
         }
 
-        // Ensure the requested user ID matches the authenticated user's ID
         if (!$currentUser instanceof User || $currentUser->getId() !== $id) {
             return new JsonResponse(['error' => 'Access denied'], 403);
         }
 
-        // Get the block list for the current user
         $blockList = $userBlockRepository->findBy(['blocker' => $currentUser]);
 
-        // Debugging: Check if blockList is empty
         if (empty($blockList)) {
             return new JsonResponse([], 200);
         }

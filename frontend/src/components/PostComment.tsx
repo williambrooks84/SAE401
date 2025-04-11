@@ -62,7 +62,7 @@ export default function PostComment({ postId, updateCommentCount }: PostCommentP
         if (response.ok) {
             setSuccessMessage('Comment published successfully!');
             setComment('');
-            await fetchComments(); // ✅ Refresh comments and count
+            await fetchComments();
             setTimeout(() => setSuccessMessage(''), 3000);
         } else {
             const errorData = await response.json();

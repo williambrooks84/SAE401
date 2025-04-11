@@ -23,7 +23,6 @@ export default function Settings({ isVisible, onClose }: ProfileLoginProps) {
         }
     }, []);
 
-    // Sauvegarder les paramètres dès qu'ils changent
     useEffect(() => {
         localStorage.setItem("autoRefresh", autoRefresh.toString());
         localStorage.setItem("refreshInterval", refreshInterval.toString());

@@ -25,7 +25,6 @@ export default function ProfileHead({
 
   return (
     <div className="flex flex-col justify-center p-5 gap-5 w-full md:w-1/2 rounded-4xl bg-post-background mx-auto">
-      {/* Banner and Avatar */}
       <div
         className="relative h-48 md:h-80 bg-cover bg-center rounded-lg"
         style={{
@@ -53,7 +52,6 @@ export default function ProfileHead({
         <FollowerCounter followerCount={followerCount} followingCount={followingCount} />
       </div>
 
-      {/* If it's the current user's profile, show "Edit your profile" button */}
       {isCurrentUser && (
         <div className="flex justify-center">
           <Button
@@ -93,7 +91,6 @@ export default function ProfileHead({
             className="min-w-28"
             onClick={onBlockToggle}
           >
-            {/* If user is blocked, show 'Unblock', otherwise 'Block' */}
             {isBlocked ? "Unblock" : "Block"}
           </Button>
         </div>

@@ -3,10 +3,10 @@ import Post from "./Post";
 import { PostData } from "../interfaces/dataDefinitions";
 import NavigationBar from "../ui/NavigationBar";
 import Button from "../ui/Button";
-import { useAuth } from "../context/AuthContext"; // Assuming you have an AuthContext
+import { useAuth } from "../context/AuthContext"; 
 
 export default function Home() {
-  const { token } = useAuth(); // Getting the logged-in user's info
+  const { token } = useAuth(); 
   const [posts, setPosts] = useState<PostData[]>([]);
   const [nextPage, setNextPage] = useState<number | null>(1);
   const [hasMore, setHasMore] = useState(true);
@@ -14,11 +14,10 @@ export default function Home() {
   const [autoRefresh, setAutoRefresh] = useState(false);
   const [refreshInterval, setRefreshInterval] = useState(30);
 
-  // Fetch block status for a specific user
   const checkIfBlocked = async (blockedUserId: string) => {
     if (!token) {
       console.warn("User is not authenticated. Skipping block status check.");
-      return { isBlockedByCurrentUser: false, isBlockedByProfileUser: false, isBlockedByAdmin: false }; // Default return
+      return { isBlockedByCurrentUser: false, isBlockedByProfileUser: false, isBlockedByAdmin: false }; 
     }
 
     try {
@@ -28,7 +27,7 @@ export default function Home() {
 
       if (!response.ok) {
         console.error("Failed to fetch block status");
-        return { isBlockedByCurrentUser: false, isBlockedByProfileUser: false, isBlockedByAdmin: false }; // Default return
+        return { isBlockedByCurrentUser: false, isBlockedByProfileUser: false, isBlockedByAdmin: false };
       }
 
       const data = await response.json();
@@ -39,11 +38,10 @@ export default function Home() {
       };
     } catch (err) {
       console.error("Error fetching block status:", err);
-      return { isBlockedByCurrentUser: false, isBlockedByProfileUser: false, isBlockedByAdmin: false }; // Default return
+      return { isBlockedByCurrentUser: false, isBlockedByProfileUser: false, isBlockedByAdmin: false }; 
     }
   };
 
-  // Fetch posts and handle blocked users
   useEffect(() => {
     async function fetchPosts() {
       if (loading || !hasMore || nextPage === null) return;
@@ -64,21 +62,18 @@ export default function Home() {
 
       const data = await response.json();
 
-      // Filter posts based on block status
       const filteredPosts = await Promise.all(
         data.posts.map(async (post: PostData) => {
           const blockStatus = await checkIfBlocked(post.user_id);
 
-          // Exclude posts if the user is blocked by the current user, has blocked the current user, or is blocked by the admin
           if (blockStatus.isBlockedByCurrentUser || blockStatus.isBlockedByProfileUser || blockStatus.isBlockedByAdmin) {
-            return null; // Exclude post if blocked
+            return null; 
           }
 
           return post;
         })
       );
 
-      // Remove null posts (blocked users' posts)
       setPosts((prevPosts) => {
         const uniquePosts = [...prevPosts, ...filteredPosts.filter((post) => post !== null)];
         return uniquePosts.filter((post, index, self) => 
@@ -98,7 +93,6 @@ export default function Home() {
     fetchPosts();
   }, [nextPage, loading, hasMore, token]);
 
-  // Refresh posts
   const refreshPosts = async () => {
     setLoading(true);
     setHasMore(true);
@@ -122,9 +116,8 @@ export default function Home() {
       data.posts.map(async (post: PostData) => {
         const blockStatus = await checkIfBlocked(post.user_id);
 
-        // Exclude posts if the user is blocked by the current user, has blocked the current user, or is blocked by the admin
         if (blockStatus.isBlockedByCurrentUser || blockStatus.isBlockedByProfileUser || blockStatus.isBlockedByAdmin) {
-          return null; // Exclude post if blocked
+          return null; 
         }
 
         return post;
@@ -142,18 +135,16 @@ export default function Home() {
     setLoading(false);
   };
 
-  // Auto-refresh posts based on interval
   useEffect(() => {
     if (!autoRefresh) return;
 
     const intervalId = setInterval(() => {
       refreshPosts();
-    }, refreshInterval * 1000); // refresh every `refreshInterval` seconds
+    }, refreshInterval * 1000);
 
-    return () => clearInterval(intervalId); // Clean up interval on component unmount or change
+    return () => clearInterval(intervalId);
   }, [autoRefresh, refreshInterval]);
 
-  // Save auto-refresh settings to localStorage
   useEffect(() => {
     const savedAutoRefresh = localStorage.getItem("autoRefresh");
     const savedInterval = localStorage.getItem("refreshInterval");

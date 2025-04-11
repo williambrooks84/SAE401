@@ -15,7 +15,7 @@ export default function Publish() {
     const [successMessage, setSuccessMessage] = useState('');
     const [loading, setLoading] = useState(false);
     const [files, setFiles] = useState<File[]>([]);
-    const [filePreviews, setFilePreviews] = useState<string[]>([]); // Store previews
+    const [filePreviews, setFilePreviews] = useState<string[]>([]); 
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -38,27 +38,24 @@ export default function Publish() {
             const compressedFiles: File[] = [];
             const previews: string[] = [];
     
-            // Loop over the selected files
             for (const file of Array.from(selectedFiles)) {
                 try {
-                    const compressedFile = await compressImage(file, 1, 500); // Compress to 1MB and resize to 500px max dimension
+                    const compressedFile = await compressImage(file, 1, 500);
                     compressedFiles.push(compressedFile);
     
                     const reader = new FileReader();
                     reader.onloadend = () => {
-                        previews.push(reader.result as string); // Push preview to the array
-                        // Once all previews are gathered, set them in state
+                        previews.push(reader.result as string); 
                         if (previews.length === selectedFiles.length) {
-                            setFilePreviews(previews); // Update previews state after all previews are loaded
+                            setFilePreviews(previews);
                         }
                     };
-                    reader.readAsDataURL(compressedFile); // Use Data URL for preview
+                    reader.readAsDataURL(compressedFile);
                 } catch (error) {
                     console.error("Error compressing file:", error);
                 }
             }
     
-            // Append new files to the current files state instead of overwriting
             setFiles(prev => [...prev, ...compressedFiles]);
         }
     };
@@ -77,20 +74,16 @@ export default function Publish() {
         formData.append("content", post);
     
         files.forEach((file) => {
-            formData.append("files[]", file); // Make sure to append as "files[]"
+            formData.append("files[]", file);
         });
-    
-        console.log("FormData:", files); // Debugging line to check FormData content
-    
-        const token = localStorage.getItem("access_token");
     
         try {
             const response = await fetch("http://localhost:8080/posts", {
                 method: "POST",
                 headers: {
-                    Authorization: `Bearer ${token}`, // Use the token for authorization
+                    Authorization: `Bearer ${token}`, 
                 },
-                body: formData, // Use FormData to send files and content
+                body: formData, 
             });
     
             const data = await response.json();
@@ -99,13 +92,11 @@ export default function Publish() {
                 setPostError(data.error || "An error occurred while publishing.");
             } else {
                 setSuccessMessage("Post published successfully!");
-                setPost(''); // Reset content field
-                setFiles([]); // Clear files after posting
-                setFilePreviews([]); // Clear file previews
-    
-                // Show success message briefly, then redirect
+                setPost(''); 
+                setFiles([]);
+                setFilePreviews([]);
                 setTimeout(() => {
-                    navigate('/'); // Redirect after 2 seconds
+                    navigate('/'); 
                 }, 2000);
             }
         } catch (error) {
@@ -141,10 +132,10 @@ export default function Publish() {
                             <span className="file-input-text border p-2 rounded-2xl"> Select files </span>
                             <input
                                 type="file"
-                                accept="image/*,video/*" // Accept images and videos
+                                accept="image/*,video/*"
                                 onChange={handleFileChange}
                                 className="file-input hidden"
-                                multiple // Allow multiple files
+                                multiple 
                             />
                         </label>
                     </div>
@@ -154,16 +145,15 @@ export default function Publish() {
                             <h3 className="text-lg font-medium">File Previews:</h3>
                             <div className="flex flex-wrap gap-4 mt-2 justify-center">
                                 {filePreviews.map((preview, index) => {
-                                    const file = files[index]; // Access the file object for the current index
+                                    const file = files[index]; 
                                     return (
                                         <div key={index} className="w-1/2 h-auto overflow-hidden rounded-lg">
-                                            {/* Check if the file is defined and its type is supported */}
                                             {file && file.type.startsWith('image') ? (
                                                 <img src={preview} alt="file preview" className="w-full h-full object-cover" />
                                             ) : file && file.type.startsWith('video') ? (
                                                 <video src={preview} className="w-full h-full object-cover" controls />
                                             ) : (
-                                                <div>Unsupported file type</div> // Handle unsupported file types
+                                                <div>Unsupported file type</div>
                                             )}
                                         </div>
                                     );

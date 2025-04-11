@@ -12,37 +12,31 @@ export default function Profile() {
   const [posts, setPosts] = useState<PostData[]>([]);
   const [loading, setLoading] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
-  const [isBlocked, setIsBlocked] = useState<boolean>(false);  // Track if the current user blocked the profile user
-  const [blockedMe, setBlockedMe] = useState<boolean>(false);  // Track if the current user is blocked by the profile user
+  const [isBlocked, setIsBlocked] = useState<boolean>(false); 
+  const [blockedMe, setBlockedMe] = useState<boolean>(false); 
   const { user, token } = useAuth();
   const connectedUserId = user?.userId;
 
-  // Fetch block status from the backend
   useEffect(() => {
     if (!userId || !token) return;
 
-    // First check if the block status is in localStorage
     const storedIsBlocked = localStorage.getItem(`isBlocked_${userId}`);
     const storedBlockedMe = localStorage.getItem(`blockedMe_${userId}`);
     
-    // If stored block status exists, use it
     if (storedIsBlocked && storedBlockedMe) {
       setIsBlocked(storedIsBlocked === "true");
       setBlockedMe(storedBlockedMe === "true");
     }
 
-    // Fetch block status from the backend
     fetch(`http://localhost:8080/users/${userId}/is-blocked`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((response) => response.json())
       .then((data) => {
-        // Ensure that we have valid data before setting the block status
         if (data && typeof data.isBlockedByCurrentUser !== 'undefined' && typeof data.isBlockedByProfileUser !== 'undefined') {
-          setIsBlocked(data.isBlockedByCurrentUser);  // This indicates if the current user has blocked the profile user
-          setBlockedMe(data.isBlockedByProfileUser);  // This indicates if the profile user has blocked the current user
+          setIsBlocked(data.isBlockedByCurrentUser);
+          setBlockedMe(data.isBlockedByProfileUser);
 
-          // Sync with localStorage for persistence across page reloads
           localStorage.setItem(`isBlocked_${userId}`, data.isBlockedByCurrentUser.toString());
           localStorage.setItem(`blockedMe_${userId}`, data.isBlockedByProfileUser.toString());
         } else {
@@ -54,12 +48,9 @@ export default function Profile() {
       });
   }, [userId, token]);
 
-
-  // Fetch profile data
   useEffect(() => {
     if (!userId) return;
 
-    // Fetch profile data
     fetch(`http://localhost:8080/profile/${userId}`)
       .then((response) => response.json())
       .then((data) => {
@@ -79,11 +70,9 @@ export default function Profile() {
       });
   }, [userId]);
 
-  // Fetch follow status after profile data is loaded
   useEffect(() => {
     if (!userId || !token || !profileData) return;
 
-    // Fetch follow status
     fetch(`http://localhost:8080/users/isFollowing/${userId}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
@@ -93,11 +82,10 @@ export default function Profile() {
       });
   }, [userId, token, profileData]);
 
-  // Fetch posts only if the user is NOT blocked
   useEffect(() => {
     if (isBlocked || blockedMe) {
-      setPosts([]); // Clear posts if the user is blocked or if the current user is blocked by the profile
-      return; // Skip fetching posts if blocked
+      setPosts([]);
+      return;
     }
 
     if (!userId || !profileData || !token) return;
@@ -108,14 +96,13 @@ export default function Profile() {
     })
       .then((response) => response.json())
       .then((data) => {
-        setPosts(data.posts || []); // Set posts if not blocked
+        setPosts(data.posts || []);
       })
       .finally(() => {
         setLoading(false);
       });
   }, [userId, profileData, token, isBlocked, blockedMe]);
 
-  // Follow/unfollow logic
   function handleFollowToggle() {
     if (!token) return;
 
@@ -134,11 +121,9 @@ export default function Profile() {
     });
   }
 
-  // Block/unblock logic (Unfollow on both sides)
   function handleBlockToggle() {
     if (!token) return;
   
-    // Block user logic
     fetch(`http://localhost:8080/users/${userId}/block`, {
       method: isBlocked ? "DELETE" : "POST",
       headers: {
@@ -149,19 +134,16 @@ export default function Profile() {
       .then((response) => {
         if (response.ok) {
           const newBlockStatus = !isBlocked;
-          setIsBlocked(newBlockStatus);  // Toggle block status in the state
-          setBlockedMe(newBlockStatus);  // Update blockedMe state to reflect the change
+          setIsBlocked(newBlockStatus); 
+          setBlockedMe(newBlockStatus);
   
-          // Sync block status with localStorage
           localStorage.setItem(`isBlocked_${userId}`, newBlockStatus.toString());
           localStorage.setItem(`blockedMe_${userId}`, newBlockStatus.toString());
   
           console.log("Block status updated:", { isBlocked: newBlockStatus, blockedMe: newBlockStatus });
   
-          // Automatically unfollow when blocked
           if (newBlockStatus) {
-            setIsFollowing(false); // Unfollow the user on current side
-            // Unfollow the current user on the blocked user's side
+            setIsFollowing(false);
             fetch(`http://localhost:8080/users/${userId}/unfollow`, {
               method: "DELETE",
               headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
@@ -202,14 +184,12 @@ export default function Profile() {
           blockedMe={blockedMe}
         />
         
-        {/* Show blocked message if the current user is blocked */}
         {blockedMe ? (
           <div className="flex flex-col items-center">
             <p>This user has blocked you. You cannot see their posts or follow them.</p>
           </div>
         ) : (
           <>
-            {/* Show posts only if the user is not blocked */}
             {posts.length === 0 ? (
               <p>No posts to show</p>
             ) : (

@@ -18,13 +18,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .then((response) => response.json())
         .then((data) => {
           if (data && data.username && data.user_id) {
-            // Store the user data in the context
             setUser({ username: data.username, userId: data.user_id });
           }
         })
         .catch(() => {
           console.error("Failed to fetch user data.");
-          logout(); // Log out if token is invalid
+          logout();
         });
     }
   }, [token]);
@@ -32,7 +31,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = (newToken: string, user: User) => {
     localStorage.setItem("access_token", newToken);
     setToken(newToken);
-    setUser(user);  // Set user data during login
+    setUser(user); 
   };
 
   const logout = () => {

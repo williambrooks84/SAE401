@@ -29,7 +29,7 @@ class Token
     public function __construct(User $user)
     {
         $this->user = $user;
-        $this->value = bin2hex(random_bytes(32)); // Generate a random API token
+        $this->value = bin2hex(random_bytes(32));
         $this->createdAt = new \DateTimeImmutable();
         $this->isValid = true;
     }

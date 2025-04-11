@@ -21,7 +21,7 @@ export default function EditProfile() {
     const [websiteError, setWebsiteError] = useState<string | null>(null);
     const navigate = useNavigate();
 
-    const API_URL = "http://localhost:8080"; // Hardcoded API URL
+    const API_URL = "http://localhost:8080"; 
 
     const validateWebsite = (website: string) => {
         const regex = /^(https?:\/\/)?(www\.)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(:\d+)?(\/[^\s]*)?$/;
@@ -30,7 +30,7 @@ export default function EditProfile() {
 
     const handleWebsiteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
-        setNewWebsite(value); // Update the state without validation
+        setNewWebsite(value); 
     };
 
     const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -47,13 +47,13 @@ export default function EditProfile() {
             }
 
             try {
-                const compressedFile = await compressImage(file, 1, 500); // Compress to 1MB and resize to 500px max dimension
+                const compressedFile = await compressImage(file, 1, 500); 
                 setAvatarFile(compressedFile);
                 const reader = new FileReader();
                 reader.onloadend = () => {
                     setAvatarPreview(reader.result as string);
                 };
-                reader.readAsDataURL(compressedFile); // Use Data URL for preview
+                reader.readAsDataURL(compressedFile); 
             } catch (error) {
                 alert("Error compressing the image: " + error);
             }
@@ -104,7 +104,7 @@ export default function EditProfile() {
     
             if (response.ok) {
                 console.log('Avatar uploaded successfully:', result.filename);
-                // Update avatar state if needed
+
             } else {
                 console.error('Avatar upload failed:', result.error);
             }
@@ -122,7 +122,7 @@ export default function EditProfile() {
                 method: "POST",
                 body: formData,
                 headers: {
-                    Authorization: `Bearer ${token}`, // Add the token if needed
+                    Authorization: `Bearer ${token}`, 
                 },
             });
     
@@ -170,13 +170,12 @@ export default function EditProfile() {
     const handleEdit = async () => {
         setLoading(true);
         
-        // Validate website field
         if (newWebsite && !validateWebsite(newWebsite)) {
             setWebsiteError("Please enter a valid website URL.");
             setLoading(false);
-            return; // Prevent form submission if invalid
+            return; 
         } else {
-            setWebsiteError(null); // Clear the error if valid or empty
+            setWebsiteError(null); 
         }
     
         const updatedProfile: {
@@ -193,7 +192,6 @@ export default function EditProfile() {
             website: newWebsite,
         };
         
-        // Compress avatar and banner before uploading (if exists)
         if (avatarFile) {
             updatedProfile.avatar = avatarFile;
         }
@@ -206,9 +204,9 @@ export default function EditProfile() {
                 method: "PATCH",
                 headers: {
                     "Authorization": `Bearer ${token}`,
-                    "Content-Type": "application/json",  // Important for sending JSON data
+                    "Content-Type": "application/json", 
                 },
-                body: JSON.stringify(updatedProfile),  // Send as JSON
+                body: JSON.stringify(updatedProfile),
             });
     
             const contentType = response.headers.get("Content-Type");
@@ -244,7 +242,7 @@ export default function EditProfile() {
         } finally {
             setLoading(false);
             if (user?.userId) {
-                navigate(`/profile/${user.userId}`); // Redirect to profile page after update
+                navigate(`/profile/${user.userId}`);
             }
         }
     };
