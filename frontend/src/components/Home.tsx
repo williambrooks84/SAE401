@@ -80,7 +80,10 @@ export default function Home() {
 
       // Remove null posts (blocked users' posts)
       setPosts((prevPosts) => {
-        return [...prevPosts, ...filteredPosts.filter((post) => post !== null)];
+        const uniquePosts = [...prevPosts, ...filteredPosts.filter((post) => post !== null)];
+        return uniquePosts.filter((post, index, self) => 
+          post && self.findIndex(p => p?.id === post.id) === index
+        );
       });
 
       if (data.next_page) {

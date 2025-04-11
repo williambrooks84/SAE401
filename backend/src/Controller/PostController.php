@@ -387,4 +387,53 @@ class PostController extends AbstractController
 
         return new JsonResponse(['comment_count' => $commentCount]);
     }
+
+    #[Route('/dashboardposts', name: 'posts.dashboardindex', methods: ['GET'])]
+    public function dashboardIndex(PostRepository $postRepository): JsonResponse
+    {
+        $paginator = $postRepository->paginateAllOrderedByLatest(0, PHP_INT_MAX);
+
+        if (!$paginator->count()) {
+            return $this->json(['error' => 'No posts found'], JsonResponse::HTTP_NOT_FOUND);
+        }
+
+        $posts = [];
+        foreach ($paginator as $post) {
+            $user = $post->getUser();
+            $roles = $user->getRoles();
+            $isBlocked = in_array('ROLE_USER_BLOCKED', $roles);
+
+            $content = $isBlocked ? 'This user has been blocked for violation of terms of service' : $post->getContent();
+
+            $posts[] = [
+                'id' => $post->getId(),
+                'user_id' => $user->getId(),
+                'content' => $content,
+                'created_at' => $post->getCreatedAt()->format('Y-m-d H:i:s'),
+                'avatar' => $user->getAvatar(),
+                'username' => $user->getUsername(),
+                'file_paths' => $post->getFilePaths(),
+                'is_blocked' => $isBlocked,
+            ];
+        }
+
+        return $this->json(['posts' => $posts]);
+    }
+
+    #[Route('/censor/{id}', name: 'posts.censor', methods: ['PATCH'])]
+    public function censorPost(int $id, PostRepository $postRepository, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $post = $postRepository->find($id);
+        if (!$post) {
+            return new JsonResponse(['error' => 'Post not found'], 404);
+        }
+    
+        $post->setContent('This post has been censored');
+        $post->setFilePaths([]);
+        $entityManager->persist($post);
+        $entityManager->flush();
+    
+        return new JsonResponse(['message' => 'Post censored successfully']);
+    }
+    
 }

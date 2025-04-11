@@ -42,6 +42,7 @@ export interface PostProps {
     created_at: string;
     is_blocked?: boolean;
     file_paths?: string[];
+    className?: string;
 }
 
 //PostData

@@ -6,6 +6,7 @@ import FormLabel from "../ui/FormLabel";
 import FormBox from "../ui/FormBox";
 import Button from "../ui/Button";
 import { useAuth } from "../context/AuthContext";
+import PostList from "../ui/PostList";
 
 export default function Dashboard() {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -180,8 +181,11 @@ export default function Dashboard() {
           >
             Block user
           </Button>
-
-          <Button
+            <div className="flex flex-col gap-2">
+              <FormLabel size="extralarge" label="Manage the posts:" />
+              <PostList />
+            </div>   
+            <Button
             variant="greybgless"
             size="bgless"
             rounded="none"
@@ -189,7 +193,7 @@ export default function Dashboard() {
             onClick={() => navigate("/")}
           >
             Finished? Go back to the home
-          </Button>    
+          </Button> 
         </div>
       </div>
     </div>

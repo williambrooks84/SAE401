@@ -9,7 +9,7 @@ import DateTime from "../ui/DateTime";
 import { PostProps } from "../interfaces/dataDefinitions";
 import PostComment from "./PostComment";
 
-export default function Post({ id, avatar, username, content, created_at, user_id, file_paths }: PostProps) {
+export default function Post({ id, avatar, username, content, created_at, user_id, file_paths, className }: PostProps) {
   const { token, user } = useAuth();
   const [liked, setLiked] = useState<boolean>(false);
   const [likeCount, setLikeCount] = useState<number>(0);
@@ -90,7 +90,7 @@ export default function Post({ id, avatar, username, content, created_at, user_i
 
 
   return (
-    <div className="flex flex-col p-5 gap-4 w-full md:w-1/2 rounded-4xl bg-post-background">
+    <div className={`flex flex-col p-5 gap-4 w-full md:w-1/2 rounded-4xl bg-post-background ${className}`}>
       <div className="cursor-pointer" onClick={NavigateToProfile}>
         <Avatar avatar={`http://localhost:8080${avatar}`} username={username} color="black" />
       </div>
