@@ -1,4 +1,4 @@
-import Home from "./components/Home"
+import Home from "./components/Home";
 import Login from "./components/Login";
 import Signup from "./components/Signup";
 import Publish from "./components/Publish";
@@ -11,17 +11,17 @@ import { AuthProvider } from "./context/AuthContext";
 export default function App() {
   return (
     <AuthProvider>
-      <Router>
+      <Router basename="/~brooks4/SAE401-CycleB"> 
         <Routes>
-          <Route path="/" element = {<Home />} />
+          <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
-          <Route path="/publish" element={<Publish />}/>
+          <Route path="/publish" element={<Publish />} />
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/profile/:userId" element={<Profile/>} />
+          <Route path="/profile/:userId" element={<Profile />} />
           <Route path="/foryou" element={<ForYou />} />
         </Routes>
       </Router>
-    </AuthProvider>  
-  )
+    </AuthProvider>
+  );
 }
