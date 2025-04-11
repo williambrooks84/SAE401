@@ -1,6 +1,7 @@
 import { CrossIcon } from "../assets/icons";
 import FormLabel from "../ui/FormLabel";
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 
 interface ProfileLoginProps {
     isVisible: boolean;
@@ -65,7 +66,7 @@ export default function Settings({ isVisible, onClose }: ProfileLoginProps) {
             </select>
             </div>
             <div className="my-4 border-t border-black"></div>
-            <a href="/dashboard" className="text-center text-lg font-bold">Administrator Dashboard</a>
+            <Link to="/dashboard" aria-label="Dashboard" className="text-center text-lg font-bold">Administrator Dashboard</Link>
         </div>
     )
 }

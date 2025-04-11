@@ -4,6 +4,7 @@ import { PostData } from "../interfaces/dataDefinitions";
 import NavigationBar from "../ui/NavigationBar";
 import Button from "../ui/Button";
 import { useAuth } from "../context/AuthContext";
+import { API_BASE_URL } from "../utils/config";
 
 export default function ForYou() {
   const { token } = useAuth(); // Retrieve the token from the AuthContext
@@ -31,7 +32,7 @@ export default function ForYou() {
 
       setLoading(true);
 
-      const response = await fetch("http://localhost:8080/posts/following", {
+      const response = await fetch(`${API_BASE_URL}/posts/following`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -58,7 +59,7 @@ export default function ForYou() {
   const refreshPosts = async () => {
     setLoading(true);
 
-    const response = await fetch("http://localhost:8080/posts/following", {
+    const response = await fetch(`${API_BASE_URL}/posts/following`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

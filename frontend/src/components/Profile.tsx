@@ -5,6 +5,7 @@ import Post from "./Post";
 import { PostData, ProfileProps } from "../interfaces/dataDefinitions";
 import ProfileHead from "./ProfileHead";
 import { useAuth } from "../context/AuthContext";
+import { API_BASE_URL } from "../utils/config";
 
 export default function Profile() {
   const { userId } = useParams<{ userId: string }>();
@@ -19,7 +20,7 @@ export default function Profile() {
   useEffect(() => {
     if (!userId) return;
 
-    fetch(`http://localhost:8080/profile/${userId}`)
+    fetch(`${API_BASE_URL}/profile/${userId}`)
       .then((response) => response.json())
       .then((data) => {
         if (data) {
@@ -48,7 +49,7 @@ export default function Profile() {
     }
 
     setLoading(true);
-    fetch(`http://localhost:8080/posts/user/${userId}`)
+    fetch(`${API_BASE_URL}/posts/user/${userId}`)
       .then((response) => response.json())
       .then((data) => {
         setPosts(data.posts || []);
@@ -62,7 +63,7 @@ export default function Profile() {
   function handleFollowToggle() {
     if (!token) return;
 
-    fetch(`http://localhost:8080/users/${userId}/${isFollowing ? "unfollow" : "follow"}`, {
+    fetch(`${API_BASE_URL}/users/${userId}/${isFollowing ? "unfollow" : "follow"}`, {
       method: isFollowing ? "DELETE" : "POST",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     }).then((response) => {
@@ -81,7 +82,7 @@ export default function Profile() {
   useEffect(() => {
     if (!userId || !token) return;
 
-    fetch(`http://localhost:8080/users/isFollowing/${userId}`, {
+    fetch(`${API_BASE_URL}/users/isFollowing/${userId}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((response) => response.json())
@@ -91,6 +92,9 @@ export default function Profile() {
   }, [userId, token]);
 
   if (!profileData) return <p>Loading...</p>;
+
+  const avatarUrl = `/~brooks4/SAE401-CycleB/dist${profileData.avatar}`;
+  const bannerUrl = `/~brooks4/SAE401-CycleB/dist${profileData.banner}`;
 
   return (
     <div className="flex flex-col gap-2 items-center">
@@ -104,8 +108,8 @@ export default function Profile() {
         <div className="flex flex-col items-center justify-center gap-5 w-full md:max-w-2/3 p-5">
           <ProfileHead
             username={profileData.username}
-            banner={profileData.banner}
-            avatar={profileData.avatar}
+            banner={bannerUrl}
+            avatar={avatarUrl}
             location={profileData.location}
             bio={profileData.bio}
             website={profileData.website}

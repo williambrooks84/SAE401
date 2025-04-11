@@ -9,9 +9,11 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 
 export default function App() {
+  const basename = import.meta.env.BASE_URL;
+
   return (
     <AuthProvider>
-      <Router basename="/~brooks4/SAE401-CycleB"> 
+      <Router basename={basename}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />

@@ -6,6 +6,7 @@ import FormLabel from "../ui/FormLabel";
 import FormBox from "../ui/FormBox";
 import Button from "../ui/Button";
 import { useAuth } from "../context/AuthContext"; // Import useAuth
+import { API_BASE_URL } from "../utils/config";
 
 export default function Dashboard() {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -20,7 +21,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (token) {
-      fetch("http://localhost:8080/token", {
+      fetch(`${API_BASE_URL}/token`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -81,7 +82,7 @@ export default function Dashboard() {
         return;
       }
   
-      fetch('http://localhost:8080/update', {
+      fetch(`${API_BASE_URL}/update`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -103,7 +104,7 @@ export default function Dashboard() {
       })
       .then(() => {
         alert('User updated successfully!');
-        window.location.reload(); // Reload page
+        //window.location.reload(); // Reload page
       })
       .catch((error) => {
         alert(`Error: ${error.message}`); // Display error messages
@@ -158,7 +159,7 @@ export default function Dashboard() {
             padding="default"
             onClick={() => {
               if (selectedUserId) {
-                fetch(`http://localhost:8080/users/block/${selectedUserId}`, {
+                fetch(`${API_BASE_URL}/users/block/${selectedUserId}`, {
                   method: 'PATCH',
                   headers: {
                     'Content-Type': 'application/json',

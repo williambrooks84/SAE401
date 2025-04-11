@@ -6,6 +6,7 @@ import { DeleteIcon } from "../assets/icons";
 import Avatar from "../ui/Avatar";
 import DateTime from "../ui/DateTime";
 import { PostProps } from "../interfaces/dataDefinitions";
+import { API_BASE_URL } from "../utils/config";
 
 export default function Post({ id, avatar, username, content, created_at, user_id }: PostProps) {
   const { token, user } = useAuth();
@@ -15,7 +16,7 @@ export default function Post({ id, avatar, username, content, created_at, user_i
 
   // Fetch like status
   useEffect(() => {
-    fetch(`http://localhost:8080/posts/${id}/like-status`, {
+    fetch(`${API_BASE_URL}/posts/${id}/like-status`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     })
       .then((response) => response.json())
@@ -34,7 +35,7 @@ export default function Post({ id, avatar, username, content, created_at, user_i
     setLiked(newLiked);
     setLikeCount((prev) => prev + (newLiked ? 1 : -1));
 
-    fetch(`http://localhost:8080/posts/${id}/${newLiked ? "like" : "unlike"}`, {
+    fetch(`${API_BASE_URL}/posts/${id}/${newLiked ? "like" : "unlike"}`, {
       method: newLiked ? "POST" : "DELETE",
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -42,7 +43,7 @@ export default function Post({ id, avatar, username, content, created_at, user_i
 
   const handleDeletePost = () => {
     if (window.confirm("Are you sure you want to delete this post?")) {
-      fetch(`http://localhost:8080/posts/${id}`, {
+      fetch(`${API_BASE_URL}/posts/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       })
@@ -56,10 +57,12 @@ export default function Post({ id, avatar, username, content, created_at, user_i
     window.location.href = `/profile/${user_id}`;
   }
 
+  const avatarUrl = `/~brooks4/SAE401-CycleB/dist${avatar}`;
+
   return (
     <div className="flex flex-col p-5 gap-4 w-full md:w-1/2 rounded-4xl bg-post-background">
       <div className="cursor-pointer" onClick={NavigateToProfile}>
-        <Avatar avatar={avatar} username={username} color="black" />
+        <Avatar avatar={avatarUrl} username={username} color="black" />
       </div>
       <div>
         <p className="text-xl text-post-text">{content}</p>

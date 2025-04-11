@@ -6,6 +6,7 @@ import FormLabel from "../ui/FormLabel";
 import Button from "../ui/Button";
 import LetterCounter from "../ui/LetterCounter";
 import { useAuth } from "../context/AuthContext";
+import { API_BASE_URL } from "../utils/config";
 
 export default function Publish() {
     const { token } = useAuth(); 
@@ -41,7 +42,7 @@ export default function Publish() {
 
         const token = localStorage.getItem("access_token");
 
-        const response = await fetch("http://localhost:8080/posts", {
+        const response = await fetch(`${API_BASE_URL}/posts`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
