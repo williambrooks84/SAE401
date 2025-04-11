@@ -4,6 +4,7 @@ import { PostData } from "../interfaces/dataDefinitions";
 import NavigationBar from "../ui/NavigationBar";
 import Button from "../ui/Button";
 import { useAuth } from "../context/AuthContext"; 
+import { API_BASE_URL } from "../utils/config";
 
 export default function Home() {
   const { token } = useAuth(); 
@@ -21,7 +22,7 @@ export default function Home() {
     }
 
     try {
-      const response = await fetch(`http://localhost:8080/users/${blockedUserId}/is-blocked`, {
+      const response = await fetch(`${API_BASE_URL}/users/${blockedUserId}/is-blocked`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -48,7 +49,7 @@ export default function Home() {
 
       setLoading(true);
 
-      const response = await fetch(`http://localhost:8080/posts?page=${nextPage}`, {
+      const response = await fetch(`${API_BASE_URL}/posts?page=${nextPage}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -98,7 +99,7 @@ export default function Home() {
     setHasMore(true);
     setNextPage(1);
 
-    const response = await fetch("http://localhost:8080/posts?page=1", {
+    const response = await fetch(`${API_BASE_URL}/posts?page=1`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

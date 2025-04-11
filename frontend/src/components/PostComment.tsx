@@ -6,6 +6,7 @@ import Avatar from '../ui/Avatar';
 import LetterCounter from '../ui/LetterCounter';
 import { useAuth } from '../context/AuthContext';
 import { PostCommentProps, Comment } from '../interfaces/dataDefinitions';
+import { API_BASE_URL } from '../utils/config';
 
 export default function PostComment({ postId, updateCommentCount }: PostCommentProps) {
     const { token } = useAuth();
@@ -16,7 +17,7 @@ export default function PostComment({ postId, updateCommentCount }: PostCommentP
     const [comments, setComments] = useState<Comment[]>([]);
 
     const fetchComments = async () => {
-        const response = await fetch(`http://localhost:8080/comments?post_id=${postId}`);
+        const response = await fetch(`${API_BASE_URL}/comments?post_id=${postId}`);
         const data = await response.json();
 
         if (response.ok && data.comments) {
@@ -50,7 +51,7 @@ export default function PostComment({ postId, updateCommentCount }: PostCommentP
 
         setLoading(true);
         setSuccessMessage('');
-        const response = await fetch(`http://localhost:8080/comments?post_id=${postId}`, {
+        const response = await fetch(`${API_BASE_URL}/comments?post_id=${postId}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -78,7 +79,7 @@ export default function PostComment({ postId, updateCommentCount }: PostCommentP
                 {comments.map((comment) => (
                     <div key={comment.id} className="flex flex-col mb-4">
                         <div className="cursor-pointer">
-                            <Avatar avatar={`http://localhost:8080${comment.avatar}`} username={comment.username} color="black" />
+                            <Avatar avatar={`${API_BASE_URL}${comment.avatar}`} username={comment.username} color="black" />
                         </div>
                         <div>
                             <p className="text-xl text-post-text">{comment.content}</p>

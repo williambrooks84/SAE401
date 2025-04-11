@@ -3,6 +3,7 @@ import Button from "../ui/Button";
 import FormLabel from "../ui/FormLabel";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../utils/config";
 
 export default function Signup() {
     const [username, setUsername] = useState('');
@@ -53,7 +54,7 @@ export default function Signup() {
         valid = !!username && validateEmail(email) && !!password && verifyPassword(password, confirmPassword);
 
         if (valid) {
-            const response = await fetch("http://localhost:8080/signup", {
+            const response = await fetch(`${API_BASE_URL}/signup`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, email, password }),

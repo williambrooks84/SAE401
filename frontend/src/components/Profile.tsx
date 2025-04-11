@@ -5,6 +5,7 @@ import Post from "./Post";
 import { PostData, ProfileProps } from "../interfaces/dataDefinitions";
 import ProfileHead from "./ProfileHead";
 import { useAuth } from "../context/AuthContext";
+import { API_BASE_URL } from "../utils/config";
 
 export default function Profile() {
   const { userId } = useParams<{ userId: string }>();
@@ -28,7 +29,7 @@ export default function Profile() {
       setBlockedMe(storedBlockedMe === "true");
     }
 
-    fetch(`http://localhost:8080/users/${userId}/is-blocked`, {
+    fetch(`${API_BASE_URL}/users/${userId}/is-blocked`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((response) => response.json())
@@ -51,14 +52,14 @@ export default function Profile() {
   useEffect(() => {
     if (!userId) return;
 
-    fetch(`http://localhost:8080/profile/${userId}`)
+    fetch(`${API_BASE_URL}/profile/${userId}`)
       .then((response) => response.json())
       .then((data) => {
         if (data) {
           setProfileData({
             username: data.username,
-            banner: `http://localhost:8080${data.banner}`,
-            avatar: `http://localhost:8080${data.avatar}`,
+            banner: `${API_BASE_URL}${data.banner}`,
+            avatar: `${API_BASE_URL}${data.avatar}`,
             location: data.location,
             bio: data.bio,
             website: data.website,
@@ -73,7 +74,7 @@ export default function Profile() {
   useEffect(() => {
     if (!userId || !token || !profileData) return;
 
-    fetch(`http://localhost:8080/users/isFollowing/${userId}`, {
+    fetch(`${API_BASE_URL}/users/isFollowing/${userId}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((response) => response.json())
@@ -91,7 +92,7 @@ export default function Profile() {
     if (!userId || !profileData || !token) return;
 
     setLoading(true);
-    fetch(`http://localhost:8080/posts/user/${userId}`, {
+    fetch(`${API_BASE_URL}/posts/user/${userId}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((response) => response.json())
@@ -106,7 +107,7 @@ export default function Profile() {
   function handleFollowToggle() {
     if (!token) return;
 
-    fetch(`http://localhost:8080/users/${userId}/${isFollowing ? "unfollow" : "follow"}`, {
+    fetch(`${API_BASE_URL}/users/${userId}/${isFollowing ? "unfollow" : "follow"}`, {
       method: isFollowing ? "DELETE" : "POST",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     }).then((response) => {
@@ -124,7 +125,7 @@ export default function Profile() {
   function handleBlockToggle() {
     if (!token) return;
   
-    fetch(`http://localhost:8080/users/${userId}/block`, {
+    fetch(`${API_BASE_URL}/users/${userId}/block`, {
       method: isBlocked ? "DELETE" : "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -144,7 +145,7 @@ export default function Profile() {
   
           if (newBlockStatus) {
             setIsFollowing(false);
-            fetch(`http://localhost:8080/users/${userId}/unfollow`, {
+            fetch(`${API_BASE_URL}/users/${userId}/unfollow`, {
               method: "DELETE",
               headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
             });

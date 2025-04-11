@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { User, AuthContextType } from "../interfaces/dataDefinitions"; 
+import { API_BASE_URL } from "../utils/config";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -9,7 +10,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (token) {
-      fetch("http://localhost:8080/token", {
+      fetch(`${API_BASE_URL}/token`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -36,7 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = () => {
     if (token) {
-      fetch("http://localhost:8080/logout", {
+      fetch(`${API_BASE_URL}/logout`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,

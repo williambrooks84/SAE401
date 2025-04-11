@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import NavigationBar from "../ui/NavigationBar";
 import { BlockedUserProps } from "../interfaces/dataDefinitions";
+import { API_BASE_URL } from "../utils/config";
 
 export default function Blocklist(){
     const { token } = useAuth(); 
@@ -18,7 +19,7 @@ export default function Blocklist(){
             setLoading(true);
 
             try {
-                const response = await fetch(`http://localhost:8080/blocklist/${userId}`, {
+                const response = await fetch(`${API_BASE_URL}/blocklist/${userId}`, {
                     method: "GET",
                     headers: { Authorization: `Bearer ${token}` },
                 });

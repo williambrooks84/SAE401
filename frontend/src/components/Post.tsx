@@ -8,6 +8,7 @@ import Avatar from "../ui/Avatar";
 import DateTime from "../ui/DateTime";
 import { PostProps } from "../interfaces/dataDefinitions";
 import PostComment from "./PostComment";
+import { API_BASE_URL } from "../utils/config";
 
 export default function Post({ id, avatar, username, content, created_at, user_id, file_paths, className }: PostProps) {
   const { token, user } = useAuth();
@@ -20,7 +21,7 @@ export default function Post({ id, avatar, username, content, created_at, user_i
   useEffect(() => {
     const fetchLikeCount = async () => {
       try {
-        const response = await fetch(`http://localhost:8080/posts/${id}/like-status`, {
+        const response = await fetch(`${API_BASE_URL}/posts/${id}/like-status`, {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
         if (!response.ok) {
@@ -52,7 +53,7 @@ export default function Post({ id, avatar, username, content, created_at, user_i
     setLiked(newLiked);
     setLikeCount((prev) => prev + (newLiked ? 1 : -1));
 
-    fetch(`http://localhost:8080/posts/${id}/${newLiked ? "like" : "unlike"}`, {
+    fetch(`${API_BASE_URL}/posts/${id}/${newLiked ? "like" : "unlike"}`, {
       method: newLiked ? "POST" : "DELETE",
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -60,7 +61,7 @@ export default function Post({ id, avatar, username, content, created_at, user_i
 
   const handleDeletePost = () => {
     if (window.confirm("Are you sure you want to delete this post?")) {
-      fetch(`http://localhost:8080/posts/${id}`, {
+      fetch(`${API_BASE_URL}/posts/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       }).then((response) => {
@@ -78,7 +79,7 @@ export default function Post({ id, avatar, username, content, created_at, user_i
   }
 
   const updateCommentCount = () => {
-    fetch(`http://localhost:8080/comments?post_id=${id}`)
+    fetch(`${API_BASE_URL}/comments?post_id=${id}`)
       .then((response) => response.json())
       .then((data) => {
         if (data && data.comments) {
@@ -91,7 +92,7 @@ export default function Post({ id, avatar, username, content, created_at, user_i
   return (
     <div className={`flex flex-col p-5 gap-4 w-full md:w-1/2 rounded-4xl bg-post-background ${className}`}>
       <div className="cursor-pointer" onClick={NavigateToProfile}>
-        <Avatar avatar={`http://localhost:8080${avatar}`} username={username} color="black" />
+        <Avatar avatar={`${API_BASE_URL}${avatar}`} username={username} color="black" />
       </div>
       <div>
         <p className="text-xl text-post-text">{content}</p>
@@ -100,7 +101,7 @@ export default function Post({ id, avatar, username, content, created_at, user_i
             <div className="flex flex-col items-center gap-5 mt-2">
               {file_paths.map((file_path, index) => {
                 const isVideo = file_path.endsWith(".mp4");
-                const mediaSrc = `http://localhost:8080${file_path}`;
+                const mediaSrc = `${API_BASE_URL}${file_path}`;
 
                 return (
                   <div key={index} className="w-full md:w-2/3">

@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import { UserProps } from "../interfaces/dataDefinitions";
 import { DashboardListProps } from "../interfaces/dataDefinitions";
+import { API_BASE_URL } from "../utils/config";
 
 export default function DashboardList({ onSelectUser }: DashboardListProps) {
     const [users, setUsers] = useState<UserProps[]>([]);
     const [selectedUserId, setSelectedUserId] = useState<string>("");
 
     useEffect(() => {
-        fetch("http://localhost:8080/users")
+        fetch(`${API_BASE_URL}/users`)
             .then((response) => {
                 if (!response.ok) {
                     throw new Error("Failed to fetch users");

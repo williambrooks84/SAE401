@@ -6,6 +6,7 @@ import NavigationBar from "../ui/NavigationBar";
 import FormLabel from "../ui/FormLabel";
 import FormBox from "../ui/FormBox";
 import { compressImage } from "../utils/compressImage";
+import { API_BASE_URL } from "../utils/config";
 
 export default function EditProfile() {
     const { token, user } = useAuth();
@@ -21,7 +22,7 @@ export default function EditProfile() {
     const [websiteError, setWebsiteError] = useState<string | null>(null);
     const navigate = useNavigate();
 
-    const API_URL = "http://localhost:8080"; 
+    const API_URL = `${API_BASE_URL}`; 
 
     const validateWebsite = (website: string) => {
         const regex = /^(https?:\/\/)?(www\.)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(:\d+)?(\/[^\s]*)?$/;
@@ -92,7 +93,7 @@ export default function EditProfile() {
         formData.append('file', file);
     
         try {
-            const response = await fetch('http://localhost:8080/upload-avatar', {
+            const response = await fetch(`${API_BASE_URL}/upload-avatar`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -118,7 +119,7 @@ export default function EditProfile() {
         formData.append("file", file);
     
         try {
-            const response = await fetch("http://localhost:8080/upload-banner", {
+            const response = await fetch(`${API_BASE_URL}/upload-banner`, {
                 method: "POST",
                 body: formData,
                 headers: {
@@ -152,8 +153,8 @@ export default function EditProfile() {
                         setNewLocation(data.location ?? '');
                         setNewBio(data.bio ?? '');
                         setNewWebsite(data.website ?? '');
-                        setAvatarPreview(data.avatar ? `http://localhost:8080${data.avatar}` : null);
-                        setBannerPreview(data.banner ? `http://localhost:8080${data.banner}` : null);
+                        setAvatarPreview(data.avatar ? `${API_BASE_URL}${data.avatar}` : null);
+                        setBannerPreview(data.banner ? `${API_BASE_URL}${data.banner}` : null);
                     }
                 })
                 .catch((error) => {

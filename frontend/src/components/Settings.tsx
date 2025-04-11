@@ -3,6 +3,7 @@ import FormLabel from "../ui/FormLabel";
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { ProfileLoginProps } from "../interfaces/dataDefinitions";
+import { Link } from "react-router-dom";
 
 export default function Settings({ isVisible, onClose }: ProfileLoginProps) {
     const {user} = useAuth();
@@ -65,8 +66,8 @@ export default function Settings({ isVisible, onClose }: ProfileLoginProps) {
             </div>
             <div className="my-4 border-t border-black"></div>
             <div className="flex flex-col items-start">
-                <a href="/dashboard" className="text-lg font-bold">Administrator Dashboard</a>
-                <a href={`/blocklist/${userId}`} className="text-lg font-bold">Blocked users</a>
+                <Link to="/dashboard" aria-label="Dashboard" className="text-lg font-bold">Administrator Dashboard</Link>
+                <Link to={`/blocklist/${userId}`} className="text-lg font-bold">Blocked users</Link>
             </div>
         </div>
     )

@@ -2,6 +2,7 @@ import { HomeIcon, ProfileIcon, PublishIcon, SettingsIcon } from "../assets/icon
 import { useState } from "react";
 import ProfileMenu from "../components/ProfileMenu";
 import Settings from "../components/Settings";
+import { Link } from "react-router-dom";
 
 export default function NavigationBar() {
     const [isProfileMenuVisible, setIsProfileMenuVisible] = useState(false);
@@ -11,9 +12,9 @@ export default function NavigationBar() {
             <nav className="sticky top-0 flex w-full bg-primary justify-around items-center md:justify-center md:gap-20 px-4 py-3 bg-nav-green z-10">
                 <ul className="flex w-full justify-around items-center md:justify-center md:gap-20">
                 <li>
-                    <a href="/" aria-label="Home">
+                    <Link to="/" aria-label="Home">
                     <HomeIcon />
-                    </a>
+                    </Link>
                 </li>
                 <li>
                     <a aria-label="Settings" onClick = {() => setIsSettingsVisible(true)}>
@@ -21,9 +22,9 @@ export default function NavigationBar() {
                     </a>
                 </li>
                 <li>
-                    <a href="/publish" aria-label="Publish">
+                    <Link to="/publish" aria-label="Publish">
                     <PublishIcon />
-                    </a>
+                    </Link>
                 </li>
                 <li>
                     <a aria-label="Profile" onClick={() => setIsProfileMenuVisible(true)}

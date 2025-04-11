@@ -2,13 +2,14 @@ import { useState, useEffect } from "react";
 import Post from "../components/Post";
 import { PostProps } from "../interfaces/dataDefinitions";
 import Button from "../ui/Button";
+import { API_BASE_URL } from "../utils/config";
 
 export default function PostList() {
     const [posts, setPosts] = useState<PostProps[]>([]);
     const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
 
     useEffect(() => {
-        fetch("http://localhost:8080/dashboardposts")
+        fetch(`${API_BASE_URL}/dashboardposts`)
             .then((response) => {
                 if (!response.ok) {
                     throw new Error("Failed to fetch posts");
@@ -37,7 +38,7 @@ export default function PostList() {
             return;
         }
 
-        fetch(`http://localhost:8080/censor/${selectedPostId}`, {
+        fetch(`${API_BASE_URL}/censor/${selectedPostId}`, {
             method: "PATCH",
             headers: {
                 "Content-Type": "application/json",

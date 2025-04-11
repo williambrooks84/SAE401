@@ -7,6 +7,7 @@ import Button from "../ui/Button";
 import LetterCounter from "../ui/LetterCounter";
 import { useAuth } from "../context/AuthContext";
 import { compressImage } from "../utils/compressImage";
+import { API_BASE_URL } from "../utils/config";
 
 export default function EditPost() {
     const { token } = useAuth();
@@ -29,7 +30,7 @@ export default function EditPost() {
     useEffect(() => {
         if (!id || !token) return;
     
-        fetch(`http://localhost:8080/posts/${id}`, {
+        fetch(`${API_BASE_URL}/posts/${id}`, {
             method: "GET",
             headers: {
                 Authorization: `Bearer ${token}`,
@@ -131,7 +132,7 @@ export default function EditPost() {
         }
     
         try {
-            const response = await fetch(`http://localhost:8080/posts/${id || ''}`, {
+            const response = await fetch(`${API_BASE_URL}/posts/${id || ''}`, {
                 method:"POST" ,
                 headers: {
                     Authorization: `Bearer ${token}`,
